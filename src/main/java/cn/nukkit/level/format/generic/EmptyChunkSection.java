@@ -2,6 +2,7 @@ package cn.nukkit.level.format.generic;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.level.format.ChunkSection;
+import cn.nukkit.level.format.beacon.BeaconChunkSection;
 import cn.nukkit.level.util.BitArrayVersion;
 import cn.nukkit.level.util.PalettedBlockStorage;
 import cn.nukkit.utils.BinaryStream;
