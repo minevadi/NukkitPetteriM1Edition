@@ -72,6 +72,30 @@ public abstract class BaseLevelProvider implements LevelProvider {
         this.spawn = new Vector3(this.levelData.getInt("SpawnX"), this.levelData.getInt("SpawnY"), this.levelData.getInt("SpawnZ"));
     }
 
+    // Custom Provider
+    public BaseLevelProvider(final Level level, final String name, boolean w) {
+        this.level = level;
+        this.path = null;
+    }
+
+    // Custom Provider
+    public BaseLevelProvider(final Level level, final String path, final String name, boolean w) {
+        this.level = level;
+        this.path = path;
+        final File file_path = new File(this.path);
+        if (!file_path.exists()) {
+            file_path.mkdirs();
+        }
+        final File file = new File(this.path + "/" + name + ".beacon");
+        if (!file.exists()){
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public abstract BaseFullChunk loadChunk(long index, int chunkX, int chunkZ, boolean create);
 
     public int size() {
