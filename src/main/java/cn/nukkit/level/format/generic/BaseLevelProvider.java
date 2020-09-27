@@ -37,7 +37,7 @@ public abstract class BaseLevelProvider implements LevelProvider {
 
     protected CompoundTag levelData;
 
-    private Vector3 spawn;
+    protected Vector3 spawn;
 
     protected final AtomicReference<BaseRegionLoader> lastRegion = new AtomicReference<>();
 
@@ -45,7 +45,7 @@ public abstract class BaseLevelProvider implements LevelProvider {
 
     protected final Long2ObjectMap<BaseFullChunk> chunks = new Long2ObjectOpenHashMap<>();
 
-    private final AtomicReference<BaseFullChunk> lastChunk = new AtomicReference<>();
+    protected final AtomicReference<BaseFullChunk> lastChunk = new AtomicReference<>();
 
     public BaseLevelProvider(Level level, String path) throws IOException {
         this.level = level;
