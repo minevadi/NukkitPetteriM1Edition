@@ -35,13 +35,7 @@ public class Beacon extends BaseLevelProvider{
 	public Beacon(String path, String name, CompoundTag levelData) throws Exception {
         super(null, path, true);
         this._constructingName = name;
-		this.levelData = levelData;
-		
-        File file = new File(path + "/" + name + ".beacon");
-        if (file.exists()) {
-        	AbstractBeaconLoader converter = new BasicBeaconLoader(file);
-            converter.deserialize(this);
-        }
+	this.levelData = levelData;
 	}
 	
     public Beacon(Level level, String path, String name) throws Exception {
