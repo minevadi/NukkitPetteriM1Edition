@@ -351,7 +351,7 @@ public class Level implements ChunkManager, Metadatable {
         this.generatorClass = Generator.getGenerator(this.provider.getGenerator());
 
         try {
-            this.useSections = (boolean) provider.getMethod("usesChunkSection").invoke(null);
+            this.useSections = (boolean) this.provider.getClass().getMethod("usesChunkSection").invoke(null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
