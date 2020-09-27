@@ -1,4 +1,4 @@
-package com.mvadi.skyblock.island.level.beacon;
+package cn.nukkit.level.format.beacon;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mvadi.skyblock.island.level.generic.BasicBeaconLoader;
+import cn.nukkit.level.format.generic.BasicBeaconLoader;
 
 import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockentity.BlockEntitySpawnable;
