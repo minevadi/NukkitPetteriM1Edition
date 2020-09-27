@@ -35,6 +35,7 @@ import cn.nukkit.level.biome.EnumBiome;
 import cn.nukkit.level.format.LevelProvider;
 import cn.nukkit.level.format.LevelProviderManager;
 import cn.nukkit.level.format.anvil.Anvil;
+import cn.nukkit.level.format.beacon.Beacon;
 import cn.nukkit.level.generator.*;
 import cn.nukkit.math.NukkitMath;
 import cn.nukkit.metadata.EntityMetadataStore;
@@ -422,6 +423,7 @@ public class Server {
         }
 
         LevelProviderManager.addProvider(this, Anvil.class);
+        LevelProviderManager.addProvider(this, Beacon.class);
 
         Generator.addGenerator(Flat.class, "flat", Generator.TYPE_FLAT);
         Generator.addGenerator(Normal.class, "normal", Generator.TYPE_INFINITE);
@@ -943,6 +945,30 @@ public class Server {
 
         this.tickProcessor();
         this.forceShutdown();
+    }
+    
+    public boolean loadBeaconLevelFromBytes(String name, String fid, byte[] serializedWorld) {
+        if (Objects.equals(name.trim(), "")) {
+            throw new LevelException("Invalid empty level name");
+        }
+
+        Level level;
+        try {
+            level = new Level(this, name, fid, serializedWorld);
+        } catch (Exception e) {
+            log.error(this.getLanguage().translateString("nukkit.level.loadError", new String[]{name, e.getMessage()}));
+            return false;
+        }
+
+        this.levels.put(level.getId(), level);
+
+        level.initLevel();
+
+        this.getPluginManager().callEvent(new LevelLoadEvent(level));
+
+        level.setTickRate(this.baseTickRate);
+
+        return true;
     }
 
     public void handlePacket(InetSocketAddress address, ByteBuf payload) {
