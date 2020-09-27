@@ -131,7 +131,7 @@ public class Beacon extends BaseLevelProvider{
     
     public void saveLevelData() {
         try {
-            File file = new File(getPath() + "/" + _constructingName + ".beacon");
+            final File file = new File(getPath() + "/" + _constructingName + ".beacon");
             AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
             converter.saveToFile(this);
         } catch (IOException e) {
