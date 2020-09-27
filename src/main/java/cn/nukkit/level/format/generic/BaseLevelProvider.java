@@ -73,12 +73,6 @@ public abstract class BaseLevelProvider implements LevelProvider {
     }
 
     // Custom Provider
-    public BaseLevelProvider(final Level level, final String name, boolean w) {
-        this.level = level;
-        this.path = null;
-    }
-
-    // Custom Provider
     public BaseLevelProvider(final Level level, final String path, final String name, boolean w) {
         this.level = level;
         this.path = path;
