@@ -1,4 +1,4 @@
-package com.mvadi.skyblock.island.level.beacon;
+package cn.nukkit.level.format.level.beacon;
 
 import cn.nukkit.level.format.LevelProvider;
 import cn.nukkit.nbt.tag.CompoundTag;
