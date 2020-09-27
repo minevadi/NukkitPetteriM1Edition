@@ -53,7 +53,7 @@ public class BeaconChunk extends BaseChunk  {
 
         this.biomes = new byte[256];
         this.sections = new ChunkSection[16];
-        System.arraycopy(EmptyChunkSection.EMPTY, 0, this.sections, 0, 16);
+        System.arraycopy(EmptyChunkSection.BEACON_EMPTY, 0, this.sections, 0, 16);
     }
     
     public BeaconChunk(LevelProvider level) {
