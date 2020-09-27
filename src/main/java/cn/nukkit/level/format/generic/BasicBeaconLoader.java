@@ -1,4 +1,4 @@
-package com.mvadi.skyblock.island.level.generic;
+package cn.nukkit.level.format.generic;
 
 import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.entity.Entity;
@@ -9,10 +9,10 @@ import cn.nukkit.nbt.stream.NBTInputStream;
 import cn.nukkit.nbt.stream.NBTOutputStream;
 import cn.nukkit.nbt.tag.*;
 import com.github.luben.zstd.Zstd;
-import com.mvadi.skyblock.island.level.beacon.AbstractBeaconLoader;
-import com.mvadi.skyblock.island.level.beacon.Beacon;
-import com.mvadi.skyblock.island.level.beacon.BeaconChunk;
-import com.mvadi.skyblock.island.level.beacon.BeaconChunkSection;
+import cn.nukkit.level.format.beacon.AbstractBeaconLoader;
+import cn.nukkit.level.format.beacon.Beacon;
+import cn.nukkit.level.format.beacon.BeaconChunk;
+import cn.nukkit.level.format.beacon.BeaconChunkSection;
 
 import java.io.*;
 import java.nio.ByteBuffer;
