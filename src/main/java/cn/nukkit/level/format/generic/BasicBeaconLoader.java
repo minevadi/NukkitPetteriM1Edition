@@ -69,12 +69,12 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
         try {
             String worldName = provider.getConstructingName();
-            /*byte[] header = readHeader(stream);
+            byte[] header = readHeader(stream);
             if (!Arrays.equals(HEADER, header)) {
                 //throw new CorruptedWorldException(worldName);
-            }*/
+            }
 
-           // version = readVersion(stream);
+            version = readVersion(stream);
 
             minX = stream.readShort();
             minZ = stream.readShort();
@@ -185,8 +185,8 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             DataOutputStream stream = new DataOutputStream(byteStream);
 
-            //writeHeader(stream);
-            //writeVersion(stream);
+            writeHeader(stream);
+            writeVersion(stream);
 
             stream.writeShort(minX);
             stream.writeShort(minZ);
