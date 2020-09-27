@@ -27,7 +27,7 @@ public class BeaconChunkSection implements ChunkSection {
         this.y = y;
         
         this.storage = storage;
-        this.blokLight = blockLight;
+        this.blockLight = blockLight;
         this.skyLight = skyLight;
     }
 
