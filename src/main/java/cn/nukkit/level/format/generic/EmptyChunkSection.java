@@ -16,15 +16,15 @@ import java.util.Arrays;
 public class EmptyChunkSection implements ChunkSection {
 
     public static final EmptyChunkSection[] EMPTY = new EmptyChunkSection[16];
-    public static final WoolChunkSection[] WOOL_EMPTY = new WoolChunkSection[16];
+    public static final BeaconChunkSection[] BEACON_EMPTY = new BeaconChunkSection[16];
     private static final PalettedBlockStorage EMPTY_STORAGE = new PalettedBlockStorage(BitArrayVersion.V1);
 
     static {
         for (int y = 0; y < EMPTY.length; y++) {
             EMPTY[y] = new EmptyChunkSection(y);
         }
-        for (int y = 0; y < EmptyChunkSection.WOOL_EMPTY.length; y++) {
-            WOOL_EMPTY[y] = new WoolChunkSection(y);
+        for (int y = 0; y < EmptyChunkSection.BEACON_EMPTY.length; y++) {
+            BEACON_EMPTY[y] = new BeaconChunkSection(y);
         }
     }
     public static byte[] EMPTY_LIGHT_ARR = new byte[2048];
