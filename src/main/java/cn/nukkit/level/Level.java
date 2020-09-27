@@ -32,6 +32,7 @@ import cn.nukkit.level.format.Chunk;
 import cn.nukkit.level.format.ChunkSection;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.LevelProvider;
+import cn.nukkit.level.format.beacon.Beacon;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.level.format.generic.BaseLevelProvider;
 import cn.nukkit.level.format.generic.EmptyChunkSection;
@@ -273,6 +274,70 @@ public class Level implements ChunkManager, Metadatable {
         try {
             this.provider = provider.getConstructor(Level.class, String.class).newInstance(this, path);
         } catch (Exception e) {
+            throw new LevelException("Caused by " + Utils.getExceptionMessage(e));
+        }
+
+        this.timings = new LevelTimings(this);
+
+        this.provider.updateLevelName(name);
+
+        this.server.getLogger().info(this.server.getLanguage().translateString("nukkit.level.preparing",
+                TextFormat.GREEN + this.provider.getName() + TextFormat.WHITE));
+
+        this.generatorClass = Generator.getGenerator(this.provider.getGenerator());
+
+        try {
+            this.useSections = (boolean) provider.getMethod("usesChunkSection").invoke(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        this.folderName = name;
+        this.time = (int) this.provider.getTime();
+
+        this.raining = this.provider.isRaining();
+        this.rainTime = this.provider.getRainTime();
+        if (this.rainTime <= 0) {
+            setRainTime(Utils.random.nextInt(168000) + 12000);
+        }
+
+        this.thundering = this.provider.isThundering();
+        this.thunderTime = this.provider.getThunderTime();
+        if (this.thunderTime <= 0) {
+            setThunderTime(Utils.random.nextInt(168000) + 12000);
+        }
+
+        this.levelCurrentTick = this.provider.getCurrentTick();
+        this.updateQueue = new BlockUpdateScheduler(this, levelCurrentTick);
+
+        this.chunkTickRadius = Math.min(this.server.getViewDistance(), Math.max(1, this.server.getPropertyInt("chunk-ticking-radius", 4)));
+        this.chunksPerTicks = this.server.getPropertyInt("chunk-ticking-per-tick", 40);
+        this.chunkGenerationQueueSize = this.server.getPropertyInt("chunk-generation-queue-size", 8);
+        this.chunkPopulationQueueSize = this.server.getPropertyInt("chunk-generation-population-queue-size", 8);
+        this.chunkTickList.clear();
+        this.clearChunksOnTick = this.server.getPropertyBoolean("clear-chunk-tick-list", true);
+        this.cacheChunks = this.server.getPropertyBoolean("cache-chunks", false);
+        this.temporalVector = new Vector3(0, 0, 0);
+        this.tickRate = 1;
+
+        this.skyLightSubtracted = this.calculateSkylightSubtracted(1);
+
+        this.isNether = name.equals("nether");
+        this.isEnd = name.equals("the_end");
+
+        this.randomTickingEnabled = !Server.noTickingWorlds.contains(name);
+    }
+    
+    public Level(Server server, String name, String path, Class<? extends LevelProvider> provider) {
+
+        this.levelId = levelIdCounter++;
+        this.blockMetadata = new BlockMetadataStore(this);
+        this.server = server;
+        this.autoSave = server.getAutoSave();
+
+        try {
+            this.provider = Beacon.class.getConstructor(Level.class, String.class, String.class, byte[].class).newInstance(this, name, fid, serializedWorld);
+        } catch (final Exception e) {
             throw new LevelException("Caused by " + Utils.getExceptionMessage(e));
         }
 
