@@ -1,4 +1,4 @@
-package com.mvadi.skyblock.island.level.beacon;
+package cn.nukkit.level.format.beacon;
 
 import java.util.Arrays;
 
