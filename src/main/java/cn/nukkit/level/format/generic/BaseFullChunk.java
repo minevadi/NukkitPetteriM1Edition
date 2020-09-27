@@ -59,8 +59,8 @@ public abstract class BaseFullChunk implements FullChunk, ChunkManager {
     protected LevelProvider provider;
     protected Class<? extends LevelProvider> providerClass;
 
-    private int x;
-    private int z;
+    protected int x;
+    protected int z;
     private long hash;
 
     protected long changes;
