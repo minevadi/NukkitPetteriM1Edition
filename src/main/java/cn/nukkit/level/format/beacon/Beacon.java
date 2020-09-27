@@ -88,7 +88,7 @@ public class Beacon extends BaseLevelProvider{
         return generate(path, name, seed, generator, new HashMap<>());
     }
 
-    public static Beacon generate(final String path,final String name, final long seed, Cfinal lass<? extends Generator> generator, final Map<String, String> options) throws Exception {
+    public static Beacon generate(final String path,final String name, final long seed, final Class<? extends Generator> generator, final Map<String, String> options) throws Exception {
         File folder = new File(path);
         if (!folder.exists()) {
             folder.mkdirs();
