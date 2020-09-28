@@ -31,6 +31,7 @@ public class Beacon extends BaseLevelProvider{
 
     public CompoundTag levelData;
     protected String _constructingName;
+    protected String fileId;
 	
 	public Beacon(String path, String name, CompoundTag levelData) throws Exception {
         super(null, path, name, true);
@@ -48,9 +49,15 @@ public class Beacon extends BaseLevelProvider{
         }
     }
 
-    public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
-        super(level, path, name, true);
+    public Beacon(Level level, String name) throws Exception {
+        super(level, name, true);
         this._constructingName = name;
+    }
+	
+    public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
+        super(level, name, true);
+        this._constructingName = name;
+	this.fileId = path;
         AbstractBeaconLoader converter = new BasicBeaconLoader(serializedWorld);
         converter.deserialize(this);
     }
