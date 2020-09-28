@@ -137,9 +137,19 @@ public class Beacon extends BaseLevelProvider{
 	public void setLevelData(CompoundTag levelData) {
 		this.levelData = levelData;
 	}
+	
+	public String getFileId(){
+		return fileId;
+	}
     
     public void saveLevelData() {
         try {
+	    if(getPath() == null){
+            final File file = new File(getFileId() + "/" + _constructingName + ".beacon");
+            AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
+            converter.saveToFile(this);
+		    return;
+	    }	
             final File file = new File(getPath() + "/" + _constructingName + ".beacon");
             AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
             converter.saveToFile(this);
