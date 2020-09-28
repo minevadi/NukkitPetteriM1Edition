@@ -50,11 +50,6 @@ public class Beacon extends BaseLevelProvider{
             converter.deserialize(this);
         }
     }
-
-    /*public Beacon(Level level, String name) throws Exception {
-        super(level, name, true);
-        this._constructingName = name;
-    }*/
 	
     public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
         super(level, path, name, true);
