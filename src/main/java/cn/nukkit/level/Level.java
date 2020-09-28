@@ -328,7 +328,7 @@ public class Level implements ChunkManager, Metadatable {
         this.randomTickingEnabled = !Server.noTickingWorlds.contains(name);
     }
     
-    public Level(Server server, String name, String fid, byte[] serializedWorld) {
+    public Level(Server server, String fid, String name, byte[] serializedWorld) {
 
         this.levelId = levelIdCounter++;
         this.blockMetadata = new BlockMetadataStore(this);
@@ -336,7 +336,7 @@ public class Level implements ChunkManager, Metadatable {
         this.autoSave = server.getAutoSave();
 
         try {
-            this.provider = Beacon.class.getConstructor(Level.class, String.class, String.class, byte[].class).newInstance(this, name, fid, serializedWorld);
+            this.provider = Beacon.class.getConstructor(Level.class, String.class, String.class, byte[].class).newInstance(this, fid, name, serializedWorld);
         } catch (final Exception e) {
             throw new LevelException("Caused by " + Utils.getExceptionMessage(e));
         }
