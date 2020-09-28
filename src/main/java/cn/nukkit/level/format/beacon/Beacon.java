@@ -36,7 +36,7 @@ public class Beacon extends BaseLevelProvider{
 	public Beacon(String path, String name, CompoundTag levelData) throws Exception {
         super(null, path, name, true);
         this._constructingName = name;
-	this.levelData = levelData;
+	this.setLevelData(levelData);
 	}
 	
     public Beacon(Level level, String path, String name) throws Exception {
