@@ -947,14 +947,14 @@ public class Server {
         this.forceShutdown();
     }
     
-    public boolean loadBeaconLevelFromBytes(String name, String fid, byte[] serializedWorld) {
+    public boolean loadBeaconLevelFromBytes(String name, String path, byte[] serializedWorld) {
         if (Objects.equals(name.trim(), "")) {
             throw new LevelException("Invalid empty level name");
         }
 
         Level level;
         try {
-            level = new Level(this, name, fid, serializedWorld);
+            level = new Level(this, name, path, serializedWorld);
         } catch (Exception e) {
             log.error(this.getLanguage().translateString("nukkit.level.loadError", new String[]{name, e.getMessage()}));
             return false;
