@@ -71,7 +71,13 @@ public abstract class BaseLevelProvider implements LevelProvider {
 
         this.spawn = new Vector3(this.levelData.getInt("SpawnX"), this.levelData.getInt("SpawnY"), this.levelData.getInt("SpawnZ"));
     }
-
+    
+    // Custom Provider
+    public BaseLevelProvider(final Level level, final String name, boolean w) {
+        this.level = level;
+        this.path = null;
+    }
+    
     // Custom Provider
     public BaseLevelProvider(final Level level, final String path, final String name, boolean w) {
         this.level = level;
