@@ -110,6 +110,8 @@ public class Beacon extends BaseLevelProvider{
                 .putLong("dayTime", 0)
                 .putInt("gameType", 0)
                 .putBoolean("hardcore", false)
+                .putString("generatorName", Generator.getGeneratorName(generator))
+                .putString("generatorOptions", options.getOrDefault("preset", ""))
                 .putBoolean("initialized", true)
                 .putLong("lastPlayed", System.currentTimeMillis() / 1000)
                 .putString("levelName", name)
@@ -328,6 +330,21 @@ public class Beacon extends BaseLevelProvider{
     public String getName() {
         return this.levelData.getString("levelName");
     }
+	
+    @Override
+    public String getGenerator() {
+        return this.levelData.getString("generatorName");
+    }
+
+    @Override
+    public Map<String, Object> getGeneratorOptions() {
+        return new HashMap<String, Object>() {
+            {
+                put("preset", levelData.getString("generatorOptions"));
+            }
+        };
+    }
+
 
     @Override
     public void setGameRules(GameRules rules) {
