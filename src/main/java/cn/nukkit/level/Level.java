@@ -328,7 +328,7 @@ public class Level implements ChunkManager, Metadatable {
         this.randomTickingEnabled = !Server.noTickingWorlds.contains(name);
     }
     
-    public Level(Server server, String path, String name, byte[] serializedWorld) {
+    public Level(Server server, String name, String path, byte[] serializedWorld) {
 
         this.levelId = levelIdCounter++;
         this.blockMetadata = new BlockMetadataStore(this);
