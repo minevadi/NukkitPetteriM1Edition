@@ -14,54 +14,13 @@ import cn.nukkit.nbt.tag.CompoundTag;
 
 public class BeaconChunk extends BaseChunk  {
 
-    public static final BeaconChunk FULL_BEDROCK_CHUNK;
-
-    static {
-        final BeaconChunk chunk = new BeaconChunk(Beacon.class);
-        for (int Y = 0; Y < 16; Y++) {
-            final BeaconChunkSection section = new BeaconChunkSection(Y);
-            for (int x = 0; x < 16; x++) {
-                for (int y = 0; y < 16; y++) {
-                    for (int z = 0; z < 16; z++) {
-                        section.setBlockId(x, y, z, BlockID.INVISIBLE_BEDROCK);
-                        section.setBlockData(x, y, z, 0);
-                        section.setBlockLight(x, y, z, 0);
-                        section.setBlockSkyLight(x, y, z, 0);
-                    }
-                }
-            }
-            chunk.sections[Y] = section;
-        }
-        chunk.biomes = new byte[256];
-        Arrays.fill(chunk.biomes, (byte) 0);
-        chunk.heightMap = new byte[256];
-        Arrays.fill(chunk.heightMap, (byte) 256);
-        chunk.NBTtiles = new ArrayList<>();
-        chunk.NBTentities = new ArrayList<>();
-        for (ChunkSection section : chunk.getSections()) {
-            ((BeaconChunkSection) section).locked = true;
-        }
-        FULL_BEDROCK_CHUNK = chunk;
-    }
+    protected long inhabitedTime;
+    protected boolean terrainPopulated;
+    protected boolean terrainGenerated;
 	
-    protected boolean isLightPopulated = false;
-    protected boolean isPopulated = false;
-    protected boolean isGenerated = false;
-
-    public BeaconChunk(Class<? extends LevelProvider> providerClass) {
-        this.providerClass = providerClass;
-
-        this.biomes = new byte[256];
-        this.sections = new ChunkSection[16];
-        System.arraycopy(EmptyChunkSection.EMPTY, 0, this.sections, 0, 16);
-    }
-	
-    public BeaconChunk(final Class<? extends LevelProvider> providerClass, boolean w) {
-        this.providerClass = providerClass;
-
-        this.biomes = new byte[256];
-        this.sections = new ChunkSection[16];
-        System.arraycopy(EmptyChunkSection.BEACON_EMPTY, 0, this.sections, 0, 16);
+    @Override
+    public BeaconChunk clone() {
+        return (BeaconChunk) super.clone();
     }
     
     public BeaconChunk(LevelProvider level) {
@@ -69,7 +28,15 @@ public class BeaconChunk extends BaseChunk  {
         this.provider = level;
     }
     
-    public BeaconChunk(LevelProvider provider, int x, int z, BeaconChunkSection[] sections, byte[] heightMap, byte[] biomes, List<CompoundTag> entities, List<CompoundTag> tiles) {
+    public BeaconChunk(Class<? extends LevelProvider> providerClass) {
+        this.providerClass = providerClass;
+
+        this.biomes = new byte[256];
+        this.sections = new ChunkSection[16];
+        System.arraycopy(EmptyChunkSection.EMPTY, 0, this.sections, 0, 16);
+    }
+    
+    public BeaconChunk(LevelProvider provider, int x, int z, BeaconChunkSection[] sections, byte[] heightMap, byte[] biomes, List<CompoundTag> entities, List<CompoundTag> tiles, long inhabitedTime, boolean terrainPopulated, boolean terrainGenerated) {
         this.provider = provider;
         this.providerClass = provider.getClass();
         this.x = x;
@@ -79,15 +46,18 @@ public class BeaconChunk extends BaseChunk  {
         this.biomes = biomes;
         this.NBTentities = entities;
         this.NBTtiles = tiles;
+        this.inhabitedTime = inhabitedTime;
+        this.terrainPopulated = terrainPopulated;
+        this.terrainGenerated = terrainGenerated;
     }
-    
-    public static BeaconChunk getEmptyChunk(int chunkX, int chunkZ) {
+
+    public static BeaconChunk getEmptyChunk(final int chunkX, final int chunkZ) {
         return BeaconChunk.getEmptyChunk(chunkX, chunkZ, null);
     }
 
-    public static BeaconChunk getEmptyChunk(int chunkX, int chunkZ, LevelProvider provider) {
+    public static BeaconChunk getEmptyChunk(final int chunkX, final int chunkZ, final LevelProvider provider) {
         try {
-            final BeaconChunk chunk;
+            BeaconChunk chunk;
             if (provider != null) {
                 chunk = new BeaconChunk(provider);
             } else {
@@ -97,57 +67,54 @@ public class BeaconChunk extends BaseChunk  {
             chunk.setPosition(chunkX, chunkZ);
 
             chunk.heightMap = new byte[256];
-
+            chunk.inhabitedTime = 0;
+            chunk.terrainGenerated = false;
+            chunk.terrainPopulated = false;
             return chunk;
         } catch (final Exception e) {
             return null;
         }
     }
     
-    public static BeaconChunk getBorderChunk(Level level, int chunkX, int chunkZ) {
-        try {
-            return FULL_BEDROCK_CHUNK.copy(level, chunkX, chunkZ);
-        } catch (final Exception e) {
-            e.printStackTrace();
-            return null;
+    public long getInhabitedTime() {
+		return inhabitedTime;
+	}
+    
+    @Override
+    public boolean isPopulated() {
+        return this.terrainPopulated;
+    }
+
+    @Override
+    public void setPopulated() {
+        this.setPopulated(true);
+    }
+
+    @Override
+    public void setPopulated(boolean value) {
+        if (value != this.terrainPopulated) {
+            this.terrainPopulated = value;
+            setChanged();
         }
     }
-    
-    public BeaconChunk copy(Level level, int x, int z) {
-    	BeaconChunk chunk = (BeaconChunk) super.clone();
-        chunk.providerClass = providerClass;
-        chunk.x = x;
-        chunk.z = z;
-        this.provider = level.getProvider();
-        this.providerClass = level.getProvider().getClass();
-        return chunk;
+
+    @Override
+    public boolean isGenerated() {
+        return this.terrainGenerated || this.terrainPopulated;
     }
 
-	@Override
-	public boolean isGenerated() {
-		return true;
-	}
+    @Override
+    public void setGenerated() {
+        this.setGenerated(true);
+    }
 
-	@Override
-	public boolean isPopulated() {
-		return true;
-	}
-
-	@Override
-	public void setGenerated() {
-	}
-
-	@Override
-	public void setGenerated(boolean arg0) {
-	}
-
-	@Override
-	public void setPopulated() {
-	}
-
-	@Override
-	public void setPopulated(boolean arg0) {
-	}
+    @Override
+    public void setGenerated(boolean value) {
+        if (this.terrainGenerated != value) {
+            this.terrainGenerated = value;
+            setChanged();
+        }
+    }
 
 	@Override
 	public byte[] toBinary() {
