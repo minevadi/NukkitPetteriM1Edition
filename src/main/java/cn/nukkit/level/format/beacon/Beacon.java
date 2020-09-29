@@ -34,8 +34,8 @@ public class Beacon extends BaseLevelProvider{
         static private final byte[] PAD_256 = new byte[256];
 	
     protected String _constructingName;
-    protected String fileId;
     public CompoundTag levelData;
+    protected String fileId;
     
 	public Beacon(String path, String name, CompoundTag levelData) throws Exception {
         super(null, path, name, true);
@@ -56,13 +56,21 @@ public class Beacon extends BaseLevelProvider{
     public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
         super(level, path, name, true);
         this._constructingName = name;
-        
+        this.fileId = fileId;
         AbstractBeaconLoader converter = new BasicBeaconLoader(serializedWorld);
         converter.deserialize(this);
     }
     
     public String getConstructingName() {
         return _constructingName;
+    }
+	
+    public String getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
     }
     
     public static String getProviderName() {
@@ -137,6 +145,11 @@ public class Beacon extends BaseLevelProvider{
     @Override
     public void saveLevelData() {
         try {
+            if (getPath() == null) {
+                BeaconLevelSaveRequestEvent requestEvent = new BeaconLevelSaveRequestEvent(this);
+                Server.getInstance().getPluginManager().callEvent(requestEvent);
+                return;
+            }
             File file = new File(getPath() + "/" + _constructingName + ".beacon");
             AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
             converter.saveToFile(this);
