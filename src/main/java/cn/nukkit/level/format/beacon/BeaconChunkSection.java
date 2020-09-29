@@ -18,14 +18,12 @@ public class BeaconChunkSection implements ChunkSection {
 
     private final BlockStorage storage;
 
+    boolean locked = false;
     protected byte[] blockLight;
     protected byte[] skyLight;
 
-    boolean locked = false;
-
     public BeaconChunkSection(int y, BlockStorage storage, byte[] blockLight, byte[] skyLight) {
         this.y = y;
-        
         this.storage = storage;
         this.blockLight = blockLight;
         this.skyLight = skyLight;
@@ -33,10 +31,11 @@ public class BeaconChunkSection implements ChunkSection {
 
     public BeaconChunkSection(int y) {
         this.y = y;
+
         storage = new BlockStorage();
     }
 
-    private static int getWoolIndex(int x, int y, int z) {
+    private static int getBeaconIndex(int x, int y, int z) {
         return (y << 8) + (z << 4) + x;
     }
 
@@ -44,7 +43,7 @@ public class BeaconChunkSection implements ChunkSection {
     public int getY() {
         return y;
     }
-
+    
     @Override
     public int getBlockId(int x, int y, int z) {
         synchronized (storage) {
@@ -183,7 +182,7 @@ public class BeaconChunkSection implements ChunkSection {
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     for (int y = 0; y < 16; y++) {
-                        int index = getWoolIndex(x, y, z);
+                        int index = getBeaconIndex(x, y, z);
                         anvil[index] = (byte) storage.getBlockId(x, y, z);
                     }
                 }
@@ -199,7 +198,7 @@ public class BeaconChunkSection implements ChunkSection {
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     for (int y = 0; y < 16; y++) {
-                        int index = getWoolIndex(x, y, z);
+                        int index = getBeaconIndex(x, y, z);
                         anvil.set(index, (byte) storage.getBlockData(x, y, z));
                     }
                 }
