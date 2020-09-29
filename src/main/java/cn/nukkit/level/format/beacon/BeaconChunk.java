@@ -115,6 +115,21 @@ public class BeaconChunk extends BaseChunk  {
             setChanged();
         }
     }
+	
+    @Override
+    public boolean unload() throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean unload(boolean save) throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean unload(boolean save, boolean safe) {
+        return false;
+    }
 
 	@Override
 	public byte[] toBinary() {
