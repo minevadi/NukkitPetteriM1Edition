@@ -29,36 +29,44 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 public class Beacon extends BaseLevelProvider{
 
-    public CompoundTag levelData;
+        static private final byte[] PAD_256 = new byte[256];
+	
     protected String _constructingName;
     protected String fileId;
-	
+    public CompoundTag levelData;
+    
 	public Beacon(String path, String name, CompoundTag levelData) throws Exception {
         super(null, path, name, true);
         this._constructingName = name;
-	this.fileId = path;
-	this.setLevelData(levelData);
+		this.levelData = levelData;
 	}
 	
     public Beacon(Level level, String path, String name) throws Exception {
         super(level, path, name, true);
         this._constructingName = name;
-	this.fileId = path;
         File file = new File(path + "/" + name + ".beacon");
         if (file.exists()) {
         	AbstractBeaconLoader converter = new BasicBeaconLoader(file);
             converter.deserialize(this);
         }
     }
-	
+
     public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
         super(level, path, name, true);
         this._constructingName = name;
-	this.fileId = path;
+        
+        System.out.println("path: " + path);
+        System.out.println("name: " + name);
+        System.out.println("serializedWorld: " + serializedWorld);
+        
         AbstractBeaconLoader converter = new BasicBeaconLoader(serializedWorld);
         converter.deserialize(this);
     }
-	
+    
+    public String getConstructingName() {
+        return _constructingName;
+    }
+    
     public static String getProviderName() {
         return "beacon";
     }
@@ -71,16 +79,16 @@ public class Beacon extends BaseLevelProvider{
         return true;
     }
     
-    public static boolean isValid(String path) {
-        File worldNameDir = new File(path);
+    public static boolean isValid(final String path) {
+        final File worldNameDir = new File(path);
         if (!worldNameDir.exists()) {
             return false;
         }
-        File[] files = worldNameDir.listFiles();
+        final File[] files = worldNameDir.listFiles();
         if (files == null) {
             return false;
         }
-        for (File file : files) {
+        for (final File file : files) {
             if (file.getName().endsWith(".beacon")) {
                 return true;
             }
@@ -92,7 +100,7 @@ public class Beacon extends BaseLevelProvider{
         return generate(path, name, seed, generator, new HashMap<>());
     }
 
-    public static Beacon generate(final String path,final String name, final long seed, final Class<? extends Generator> generator, final Map<String, String> options) throws Exception {
+    public static Beacon generate(String path, String name, long seed, Class<? extends Generator> generator, Map<String, String> options) throws Exception {
         File folder = new File(path);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -103,51 +111,35 @@ public class Beacon extends BaseLevelProvider{
         }
 
         CompoundTag levelData = new CompoundTag("Data")
-                .putCompound("gameRules", new CompoundTag())
-                .putLong("dayTime", 0)
-                .putInt("gameType", 0)
-                .putBoolean("hardcore", false)
+                .putCompound("GameRules", new CompoundTag())
+                .putLong("DayTime", 0)
+                .putInt("GameType", 0)
                 .putString("generatorName", Generator.getGeneratorName(generator))
                 .putString("generatorOptions", options.getOrDefault("preset", ""))
+                .putInt("generatorVersion", 1)
+                .putBoolean("hardcore", false)
                 .putBoolean("initialized", true)
-                .putLong("lastPlayed", System.currentTimeMillis() / 1000)
-                .putString("levelName", name)
+                .putLong("LastPlayed", System.currentTimeMillis() / 1000)
+                .putString("LevelName", name)
                 .putBoolean("raining", false)
                 .putInt("rainTime", 0)
-                .putLong("seed", seed)
-                .putDouble("spawnX", 0)
-                .putDouble("spawnY", 100)
-                .putDouble("spawnZ", 0)
+                .putLong("RandomSeed", seed)
+                .putInt("SpawnX", 128)
+                .putInt("SpawnY", 70)
+                .putInt("SpawnZ", 128)
                 .putBoolean("thundering", false)
                 .putInt("thunderTime", 0)
-                .putLong("time", 0);
+                .putLong("Time", 0);
 
         Beacon format = new Beacon(path, name, levelData);
         format.saveLevelData();
         return format;
     }
-	
-    public CompoundTag getLevelData() {
-		return levelData;
-	}
     
-	public void setLevelData(CompoundTag levelData) {
-		this.levelData = levelData;
-	}
-	
-	public String getFileId(){
-		return fileId;
-	}
-    
+    @Override
     public void saveLevelData() {
         try {
-	    if(getPath() == null){
-            final File file = new File(getFileId() + "/" + _constructingName + ".beacon");
-            AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
-            converter.saveToFile(this);
-		    return;
-	    }	
-            final File file = new File(getPath() + "/" + _constructingName + ".beacon");
+            File file = new File(getPath() + "/" + _constructingName + ".beacon");
             AbstractBeaconLoader converter = new BasicBeaconLoader(file, false);
             converter.saveToFile(this);
         } catch (IOException e) {
@@ -155,34 +147,26 @@ public class Beacon extends BaseLevelProvider{
         }
     }
     
-    public static BeaconChunkSection createChunkSection(int y) {
-        return new BeaconChunkSection(y);
-    }
-
-    public String getConstructingName() {
-        return _constructingName;
-    }
-
-    public void setConstructingName(String _constructingName) {
-        this._constructingName = _constructingName;
+    public Long2ObjectMap<BaseFullChunk> getBeaconChunks() {
+    	return this.chunks;
     }
     
-	@Override
-	public BaseFullChunk getEmptyChunk(int chunkX, int chunkZ) {
+    @Override
+    public BeaconChunk getEmptyChunk(int chunkX, int chunkZ) {
         return BeaconChunk.getEmptyChunk(chunkX, chunkZ, this);
-	}
-
-	@Override
-	public AsyncTask requestChunkTask(int protocol, int x, int z) {
-		BeaconChunk chunk = (BeaconChunk)this.getChunk(x, z, false);
+    }
+    
+    @Override
+    public AsyncTask requestChunkTask(int protocol, int x, int z) throws ChunkException {
+    	BeaconChunk chunk = (BeaconChunk) this.getChunk(x, z, false);
         if (chunk == null) {
-            throw new ChunkException("Invalid Chunk sent");
+            throw new ChunkException("Invalid Chunk Set");
         }
 
         long timestamp = chunk.getChanges();
 
         byte[] blockEntities = new byte[0];
-        
+
         if (!chunk.getBlockEntities().isEmpty()) {
             List<CompoundTag> tagList = new ArrayList<>();
 
@@ -193,12 +177,12 @@ public class Beacon extends BaseLevelProvider{
             }
 
             try {
-            	blockEntities = NBTIO.write(tagList, ByteOrder.LITTLE_ENDIAN);
+                blockEntities = NBTIO.write(tagList, ByteOrder.LITTLE_ENDIAN, true);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
-        
+
         Map<Integer, Integer> extra = chunk.getBlockExtraDataArray();
         BinaryStream extraData;
         if (!extra.isEmpty()) {
@@ -213,16 +197,30 @@ public class Beacon extends BaseLevelProvider{
         }
 
         BinaryStream stream = ThreadCache.binaryStream.get().reset();
-        int subChunkCount  = 0;
+        int subChunkCount = 0;
         cn.nukkit.level.format.ChunkSection[] sections = chunk.getSections();
         for (int i = sections.length - 1; i >= 0; i--) {
             if (!sections[i].isEmpty()) {
-            	subChunkCount  = i + 1;
+                subChunkCount = i + 1;
                 break;
             }
         }
+        if (protocol < ProtocolInfo.v1_12_0) {
+            stream.putByte((byte) subChunkCount);
+        }
         for (int i = 0; i < subChunkCount; i++) {
-            stream.put(sections[i].getBytes());
+            if (protocol < ProtocolInfo.v1_13_0) {
+                stream.putByte((byte) 0);
+                stream.put(sections[i].getBytes());
+            } else {
+                sections[i].writeTo(protocol, stream);
+            }
+        }
+        if (protocol < ProtocolInfo.v1_12_0) {
+            for (byte height : chunk.getHeightMapArray()) {
+                stream.putByte(height);
+            }
+            stream.put(PAD_256);
         }
         stream.put(chunk.getBiomeIdArray());
         stream.putByte((byte) 0);
@@ -233,95 +231,100 @@ public class Beacon extends BaseLevelProvider{
         }
         stream.put(blockEntities);
 
-        this.getLevel().chunkRequestCallback(protocol, timestamp, x, z, subChunkCount , stream.getBuffer());
+        this.getLevel().chunkRequestCallback(protocol, timestamp, x, z, subChunkCount, stream.getBuffer());
 
         return null;
-	}
-	
-	public Long2ObjectMap<BaseFullChunk> getChunks() {
-		return this.chunks;
-	}
+    }
+    
+    private int lastPosition = 0;
 
-	@Override
-	public void doGarbageCollection(long time) {
-	}
+    @Override
+    public void doGarbageCollection(long time) {
+        long start = System.currentTimeMillis();
+        int maxIterations = size();
+        if (lastPosition > maxIterations) lastPosition = 0;
+        int i;
+        synchronized (chunks) {
+            ObjectIterator<BaseFullChunk> iter = chunks.values().iterator();
+            if (lastPosition != 0) iter.skip(lastPosition);
+            for (i = 0; i < maxIterations; i++) {
+                if (!iter.hasNext()) {
+                    iter = chunks.values().iterator();
+                }
+                if (!iter.hasNext()) break;
+                BaseFullChunk chunk = iter.next();
+                if (chunk == null) continue;
+                if (chunk.isGenerated() && chunk.isPopulated() && chunk instanceof BeaconChunk) {
+                    chunk.compress();
+                    if (System.currentTimeMillis() - start >= time) break;
+                }
+            }
+        }
+        lastPosition += i;
+    }
+    
+    @Override
+    public synchronized BaseFullChunk loadChunk(long index, int chunkX, int chunkZ, boolean create) {
+        if (this.level.timings.syncChunkLoadDataTimer != null) this.level.timings.syncChunkLoadDataTimer.startTiming();
+        BaseFullChunk chunk = null;
+        try {
+            synchronized (this.chunks) {
+                if (this.chunks.containsKey(index)) {
+                	chunk = this.chunks.get(index);
+                }
+            }
+        }catch (Exception e) {
+            throw new RuntimeException(e);
+		}
+        if (chunk == null) {
+            if (create) {
+                chunk = this.getEmptyChunk(chunkX, chunkZ);
+                putChunk(index, chunk);
+            }
+        } else {
+            putChunk(index, chunk);
+        }
+        if (this.level.timings.syncChunkLoadDataTimer != null) this.level.timings.syncChunkLoadDataTimer.stopTiming();
+        return chunk;
+    }
+    
+    @Override
+    public synchronized void saveChunk(int X, int Z) {
+        BaseFullChunk chunk = this.getChunk(X, Z);
+        if (chunk != null) {
+            try {
+            	this.saveLevelData();
+                //this.loadRegion(X >> 5, Z >> 5).writeChunk(chunk);
+            } catch (Exception e) {
+                throw new ChunkException("Error saving chunk (" + X + ", " + Z + ')', e);
+            }
+        }
+    }
+    
+    @Override
+    public synchronized void saveChunk(int x, int z, FullChunk chunk) {
+        if (!(chunk instanceof BeaconChunk)) {
+            throw new ChunkException("Invalid Chunk class");
+        }
+        
+        /*int regionX = x >> 5;
+        int regionZ = z >> 5;
+        this.loadRegion(regionX, regionZ);
+        chunk.setX(x);
+        chunk.setZ(z);*/
+        try {
+        	this.saveLevelData();
+            //this.getRegion(regionX, regionZ).writeChunk(chunk);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public void doGarbageCollection() {
-	}
-
-	@Override
-	public boolean loadChunk(int chunkX, int chunkZ, boolean create) {
-		long index = Level.chunkHash(chunkX, chunkZ);
-		synchronized (this.chunks) {
-			if (this.chunks.containsKey(index)) {
-				return true;
-			}
-		}
-		return this.loadChunk(index, chunkX, chunkZ, create) != null;
-	}
-
-	@Override
-	public BaseFullChunk getLoadedChunk(int chunkX, int chunkZ) {
-		BaseFullChunk tmp = this.lastChunk.get();
-		if (tmp != null && tmp.getX() == chunkX && tmp.getZ() == chunkZ) {
-			return tmp;
-		}
-		final long index = Level.chunkHash(chunkX, chunkZ);
-		synchronized (this.chunks) {
-			this.lastChunk.set(tmp = this.chunks.get(index));
-		}
-		return tmp;
-	}
-
-	@Override
-	public BaseFullChunk getLoadedChunk(long hash) {
-		cn.nukkit.level.format.Chunk.Entry entry = Level.getChunkXZ(hash);
-		if (entry.chunkX > 4 || entry.chunkX < -5 || entry.chunkZ > 4 || entry.chunkZ < -5) {
-			return BeaconChunk.getBorderChunk(this.level, entry.chunkX, entry.chunkZ);
-		}
-
-		BaseFullChunk tmp = this.lastChunk.get();
-		if (tmp != null && tmp.getIndex() == hash) {
-			return tmp;
-		}
-		synchronized (this.chunks) {
-			this.lastChunk.set(tmp = this.chunks.get(hash));
-		}
-		return tmp;
-	}
-
-	@Override
-	public BaseFullChunk getChunk(int x, int z, boolean create) {
-		if (x > 4 || x < -5 || z > 4 || z < -5) {
-			return BeaconChunk.getBorderChunk(this.level, x, z);
-		}
-
-		BaseFullChunk tmp = this.lastChunk.get();
-		if (tmp != null && tmp.getX() == x && tmp.getZ() == z) {
-			return tmp;
-		}
-		final long index = Level.chunkHash(x, z);
-		synchronized (this.chunks) {
-			this.lastChunk.set(tmp = this.chunks.get(index));
-		}
-		if (tmp != null) {
-			return tmp;
-		} else {
-			if (create) {
-				tmp = getEmptyChunk(x, z);
-				this.putChunk(index, tmp);
-				return tmp;
-			}
-			return null;
-		}
-	}
-
-	@Override
-	public BaseFullChunk loadChunk(long index, int chunkX, int chunkZ, boolean create) {
-		return create ? getChunk(chunkX, chunkZ, true) : null;
-	}
-	
+    public static BeaconChunkSection createChunkSection(int y) {
+    	BeaconChunkSection cs = new BeaconChunkSection(y);
+        return cs;
+    }
+    
     @Override
     public GameRules getGamerules() {
         final GameRules rules = GameRules.getDefault();
@@ -331,13 +334,25 @@ public class Beacon extends BaseLevelProvider{
         }
 
         return rules;
-    }    
+    }
 
     @Override
     public String getName() {
-        return this.levelData.getString("levelName");
+        return this.levelData.getString("LevelName");
     }
-	
+
+    @Override
+    public void setGameRules(GameRules rules) {
+        this.levelData.putCompound("gameRules", rules.writeNBT());
+    }
+
+    @Override
+    public void updateLevelName(String name) {
+        if (!this.getName().equals(name)) {
+            this.levelData.putString("LevelName", name);
+        }
+    }
+    
     @Override
     public String getGenerator() {
         return this.levelData.getString("generatorName");
@@ -351,34 +366,7 @@ public class Beacon extends BaseLevelProvider{
             }
         };
     }
-
-
-    @Override
-    public void setGameRules(GameRules rules) {
-        this.levelData.putCompound("gameRules", rules.writeNBT());
-    }
-
-    @Override
-    public void updateLevelName(String name) {
-        if (!this.getName().equals(name)) {
-            this.levelData.putString("levelName", name);
-        }
-    }
-
-    @Override
-    public void unloadChunks() {
-    }
-
-    @Override
-    public boolean unloadChunk(int X, int Z) {
-        return false;
-    }
-
-    @Override
-    public boolean unloadChunk(int X, int Z, boolean safe) {
-        return false;
-    }
-
+    
     @Override
     public boolean isRaining() {
         return this.levelData.getBoolean("raining");
@@ -421,38 +409,34 @@ public class Beacon extends BaseLevelProvider{
 
     @Override
     public long getCurrentTick() {
-        return this.levelData.getLong("time");
+        return this.levelData.getLong("DayTime");
     }
 
     @Override
     public void setCurrentTick(long currentTick) {
-        this.levelData.putLong("time", currentTick);
+        this.levelData.putLong("DayTime", currentTick);
     }
 
     @Override
     public long getTime() {
-        return this.levelData.getLong("dayTime");
+        return this.levelData.getLong("Time");
     }
 
     @Override
     public void setTime(long value) {
-        this.levelData.putLong("dayTime", value);
+        this.levelData.putLong("Time", value);
     }
 
     @Override
     public long getSeed() {
-        return this.levelData.getLong("seed");
+        return this.levelData.getLong("RandomSeed");
     }
 
     @Override
     public void setSeed(long value) {
-        this.levelData.putLong("seed", value);
+        this.levelData.putLong("RandomSeed", value);
     }
-
-    @Override
-    public void saveChunks() {
-    }
-
+    
     @Override
     public Vector3 getSpawn() {
         if (this.spawn == null) {
@@ -467,18 +451,6 @@ public class Beacon extends BaseLevelProvider{
         this.levelData.putDouble("spawnY", pos.y);
         this.levelData.putDouble("spawnZ", pos.z);
         this.spawn = pos;
-    }
-
-    @Override
-    public void saveChunk(int X, int Z) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void saveChunk(int X, int Z, FullChunk chunk) {
-        // TODO Auto-generated method stub
-
     }
 
 }
