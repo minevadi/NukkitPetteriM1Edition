@@ -55,10 +55,6 @@ public class Beacon extends BaseLevelProvider{
         super(level, path, name, true);
         this._constructingName = name;
         
-        System.out.println("path: " + path);
-        System.out.println("name: " + name);
-        System.out.println("serializedWorld: " + serializedWorld);
-        
         AbstractBeaconLoader converter = new BasicBeaconLoader(serializedWorld);
         converter.deserialize(this);
     }
@@ -145,10 +141,6 @@ public class Beacon extends BaseLevelProvider{
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    
-    public Long2ObjectMap<BaseFullChunk> getBeaconChunks() {
-    	return this.chunks;
     }
     
     @Override
