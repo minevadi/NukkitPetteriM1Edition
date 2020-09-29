@@ -282,7 +282,7 @@ public class Beacon extends BaseLevelProvider{
         return chunk;
     }
     
-    @Override
+    /*@Override
     public synchronized void saveChunk(int X, int Z) {
         BaseFullChunk chunk = this.getChunk(X, Z);
         if (chunk != null) {
@@ -300,18 +300,38 @@ public class Beacon extends BaseLevelProvider{
         if (!(chunk instanceof BeaconChunk)) {
             throw new ChunkException("Invalid Chunk class");
         }
-        
-        /*int regionX = x >> 5;
-        int regionZ = z >> 5;
-        this.loadRegion(regionX, regionZ);
-        chunk.setX(x);
-        chunk.setZ(z);*/
         try {
-        	this.saveLevelData();
-            //this.getRegion(regionX, regionZ).writeChunk(chunk);
+            this.saveLevelData();
+            this.getRegion(regionX, regionZ).writeChunk(chunk);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }*/
+	
+    @Override
+    public void saveChunks() {
+    }
+	
+    @Override
+    public synchronized void saveChunk(int X, int Z) {
+    }
+
+    @Override
+    public synchronized void saveChunk(int x, int z, FullChunk chunk) {
+    }
+
+    @Override
+    public void unloadChunks() {
+    }
+
+    @Override
+    public boolean unloadChunk(int X, int Z) {
+        return false;
+    }
+
+    @Override
+    public boolean unloadChunk(int X, int Z, boolean safe) {
+        return false;
     }
 
     public static BeaconChunkSection createChunkSection(int y) {
