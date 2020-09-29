@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.nukkit.level.format.generic.BasicBeaconLoader;
+import cn.nukkit.event.level.BeaconLevelSaveRequestEvent;
 
 import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockentity.BlockEntitySpawnable;
