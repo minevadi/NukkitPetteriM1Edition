@@ -38,6 +38,10 @@ public class BeaconChunkSection implements ChunkSection {
     private static int getBeaconIndex(int x, int y, int z) {
         return (y << 8) + (z << 4) + x;
     }
+    
+    public BlockStorage getStorage(){
+        return storage;
+    }
 
     @Override
     public int getY() {
