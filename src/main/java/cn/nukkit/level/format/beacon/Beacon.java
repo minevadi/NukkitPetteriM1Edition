@@ -56,9 +56,9 @@ public class Beacon extends BaseLevelProvider{
     }
 
     public Beacon(Level level, String path, String name, final byte[] serializedWorld) throws Exception {
-        super(level, path, name, true);
+        super(level, name, true);
         this._constructingName = name;
-        this.fileId = fileId;
+        this.fileId = path;
         AbstractBeaconLoader converter = new BasicBeaconLoader(serializedWorld);
         converter.deserialize(this);
     }
