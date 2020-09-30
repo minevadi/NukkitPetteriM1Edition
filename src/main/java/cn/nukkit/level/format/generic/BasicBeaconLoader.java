@@ -90,8 +90,8 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             chunkBitset = readBitset(stream, bitmaskSize);
 
             LinkedHashMap<Long,BeaconChunk> chunks = readChunks(stream);
-            CompoundTag tileEntitiesCompound = readTileEntities(stream);
-            CompoundTag entitiesCompound = readEntities(stream);
+            //CompoundTag tileEntitiesCompound = readTileEntities(stream);
+            //CompoundTag entitiesCompound = readEntities(stream);
             CompoundTag levelDataCompound = readLevelData(stream);
 
 
@@ -103,7 +103,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             levelDataCompound.putString("levelName",worldName);
             provider.levelData = levelDataCompound;
 
-            if (entitiesCompound != null) {
+            /*if (entitiesCompound != null) {
                 CompoundTag tag = entitiesCompound.getCompound("entities");
 
                 for (Tag xtag : tag.getAllTags()) {
@@ -138,7 +138,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
                     BlockEntity.createBlockEntity(tileEntityCompound.getString("id"), chunk, tileEntityCompound);
                 }
-            }
+            }*/
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -204,7 +204,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
             writeChunks(stream,sortedChunks);
 
-            List<CompoundTag> tileEntitiesList = new ArrayList<>();
+            /*List<CompoundTag> tileEntitiesList = new ArrayList<>();
             sortedChunks.forEach(chunk -> chunk.getBlockEntities().values().forEach(blockEntity -> {
                 blockEntity.saveNBT();
                 tileEntitiesList.add(blockEntity.namedTag);
@@ -217,7 +217,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             }));
 
             writeTileEntities(stream,tileEntitiesList);
-            writeEntities(stream,entitiesList);
+            writeEntities(stream,entitiesList);*/
 
             writeLevelData(stream, provider.levelData.clone());
             return byteStream.toByteArray();
@@ -403,6 +403,31 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         stream.writeBoolean(terrainGenerated);
         stream.writeBoolean(terrainPopulated);
         
+        
+        boolean hasEntites = !chunk.getEntities().isEmpty();
+        stream.writeBoolean(hasEntites);
+        if(hasEntites) {
+            List<CompoundTag> entitiesList = new ArrayList<>();
+            chunk.getEntities().values().forEach(entity -> {
+                entity.saveNBT();
+                entitiesList.add(entity.namedTag);
+            });
+        	
+        	writeEntities(stream, entitiesList);
+        }
+        
+        boolean hasBlockEntites = !chunk.getBlockEntities().isEmpty();
+        stream.writeBoolean(hasBlockEntites);
+        if(hasBlockEntites) {
+            List<CompoundTag> tileEntitiesList = new ArrayList<>();
+            chunk.getBlockEntities().values().forEach(blockEntity -> {
+                blockEntity.saveNBT();
+                tileEntitiesList.add(blockEntity.namedTag);
+            });
+        	
+            writeTileEntities(stream, tileEntitiesList);
+        }
+        
         ChunkSection[] sections = chunk.getSections();
         BitSet sectionBitmask = new BitSet(16);
 
@@ -418,7 +443,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             }
         }
     }
-
+    
     @Override
     public BeaconChunk readChunk(DataInputStream stream, int x, int z) throws Exception {
         byte[] byteBiomes = new byte[256];
@@ -431,6 +456,32 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         boolean terrainGenerated = stream.readBoolean();
         boolean terrainPopulated = stream.readBoolean();
         
+        boolean hasEntites = stream.readBoolean();
+        List<CompoundTag> entitiesList = new ArrayList<>();
+        if(hasEntites) {
+            CompoundTag entitiesCompound = readEntities(stream);
+            if (entitiesCompound != null) {
+                CompoundTag tag = entitiesCompound.getCompound("entities");
+                for (Tag xtag : tag.getAllTags()) {
+                    CompoundTag entityCompound = (CompoundTag) xtag;
+                    entitiesList.add(entityCompound);
+               }
+            }
+        }
+        
+        boolean hasBlockEntites = stream.readBoolean();
+        List<CompoundTag> tileEntitiesList = new ArrayList<>();
+        if(hasBlockEntites) {
+            CompoundTag tileEntitiesCompound = readTileEntities(stream);
+            if (tileEntitiesCompound != null) {
+                CompoundTag tag = tileEntitiesCompound.getCompound("tiles");
+                for (Tag xtag : tag.getAllTags()) {
+                    CompoundTag tileEntityCompound = (CompoundTag) xtag;
+                    tileEntitiesList.add(tileEntityCompound);
+                }
+            }
+        }
+        
         BitSet sectionBitset = readBitset(stream,2);
         BeaconChunkSection[] chunkSectionArray = new BeaconChunkSection[16];
 
@@ -442,7 +493,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             }
         }
         return new BeaconChunk(provider, minX + x, minZ + z,
-                chunkSectionArray, heightMap, byteBiomes, new ArrayList<>(), new ArrayList<>(),
+                chunkSectionArray, heightMap, byteBiomes, entitiesList, tileEntitiesList,
                 inhabitedTime, terrainGenerated, terrainPopulated);
     }
 
