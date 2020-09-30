@@ -132,9 +132,9 @@ public class Beacon extends BaseLevelProvider{
                 .putBoolean("raining", false)
                 .putInt("rainTime", 0)
                 .putLong("RandomSeed", seed)
-                .putInt("SpawnX", 128)
-                .putInt("SpawnY", 70)
-                .putInt("SpawnZ", 128)
+                .putInt("SpawnX", 0)
+                .putInt("SpawnY", 90)
+                .putInt("SpawnZ", 0)
                 .putBoolean("thundering", false)
                 .putInt("thunderTime", 0)
                 .putLong("Time", 0);
@@ -469,7 +469,7 @@ public class Beacon extends BaseLevelProvider{
     @Override
     public Vector3 getSpawn() {
         if (this.spawn == null) {
-            return new Vector3(0, 100, 0);
+            return new Vector3(0, 90, 0);
         }
         return spawn;
     }
