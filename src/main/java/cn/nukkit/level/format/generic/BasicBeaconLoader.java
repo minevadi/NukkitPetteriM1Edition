@@ -62,7 +62,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         rand.close();
     }
 
-    @Override
+    @Override//OKUMA
     public Beacon deserialize(Beacon provider) {
         this.provider = provider;
         DataInputStream stream = new DataInputStream(new ByteArrayInputStream(fullBytes));
@@ -85,7 +85,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             if (width <= 0 || depth <= 0) {
                 //throw new CorruptedWorldException(worldName);
             }
-
+            
             int bitmaskSize = (int) Math.ceil((width * depth) / 8.0D);
             chunkBitset = readBitset(stream, bitmaskSize);
 
@@ -146,33 +146,22 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
     }
 
-    @Override
+    @Override//YAZMA
     public byte[] serialize(Beacon provider) {
         this.provider = provider;
         List<BeaconChunk> sortedChunks;
 
-        synchronized (provider.chunks) {
+        synchronized (provider.getLoadedChunks()) {
             sortedChunks = new ArrayList<>();
-            provider.chunks.values().forEach(fullChunk -> {
+            provider.getLoadedChunks().values().forEach(fullChunk -> {
                 if (fullChunk instanceof BeaconChunk){
                     sortedChunks.add((BeaconChunk) fullChunk);
                 }
             });
         }
 
-        sortedChunks.removeIf(chunk -> chunk == null || Arrays.stream(chunk.getSections()).allMatch(s -> {
-            if (s == null) {
-                return true;
-            }
-            for (byte b : s.getIdArray()) {
-                if (b != 0) {
-                    return false;
-                }
-            }
-            return true;
-        }));
-
         sortedChunks.sort(Comparator.comparingLong(chunk -> (long) chunk.getZ() * Integer.MAX_VALUE + (long) chunk.getX()));
+        sortedChunks.removeIf(chunk -> chunk == null || Arrays.stream(chunk.getSections()).allMatch(Objects::isNull)); // Remove empty chunks to save space
 
         minX = sortedChunks.stream().mapToInt(BeaconChunk::getX).min().orElse(0);
         minZ = sortedChunks.stream().mapToInt(BeaconChunk::getZ).min().orElse(0);
@@ -193,7 +182,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
             stream.writeShort(width);
             stream.writeShort(depth);
-
+            
             chunkBitset = new BitSet(width * depth);
 
             for (BeaconChunk chunk : sortedChunks) {
@@ -274,8 +263,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
 
         return byteStream.toByteArray();
     }
-
-
+    
     @Override
     public void writeBitset(DataOutputStream stream, BitSet set, int fixedSize) throws Exception {
         byte[] array = set.toByteArray();
@@ -314,7 +302,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
                 int bitsetIndex = z * width + x;
 
                 if (chunkBitset.get(bitsetIndex)) {
-                	BeaconChunk chunk = readChunk(stream1,x,z);
+                    BeaconChunk chunk = readChunk(stream1,x,z);
 
                     chunks.put(((long) minZ + z) * Integer.MAX_VALUE + ((long) minX + x), chunk);
                 }
@@ -388,25 +376,22 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
     @Override
     public void writeChunk(DataOutputStream stream, BeaconChunk chunk) throws Exception {
         byte[] biomes = chunk.getBiomeIdArray();
-
-
         for (int i = 0; i < 256; i++) {
             stream.writeByte(biomes[i]);
         }
-
         byte[] heightMap = chunk.getHeightMapArray();
 
         for (int i = 0; i < 256; i++) {
             stream.writeByte(heightMap[i]);
         }
-
-        /*long inhabitedTime = chunk.getInhabitedTime();
+        
+        long inhabitedTime = chunk.getInhabitedTime();
         boolean terrainGenerated = chunk.isGenerated();
         boolean terrainPopulated = chunk.isPopulated();
         
         stream.writeLong(inhabitedTime);
         stream.writeBoolean(terrainGenerated);
-        stream.writeBoolean(terrainPopulated);*/
+        stream.writeBoolean(terrainPopulated);
         
         ChunkSection[] sections = chunk.getSections();
         BitSet sectionBitmask = new BitSet(16);
@@ -432,9 +417,9 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         byte[] heightMap = new byte[256];
         stream.read(heightMap);
 
-        /*long inhabitedTime = stream.readLong();
+        long inhabitedTime = stream.readLong();
         boolean terrainGenerated = stream.readBoolean();
-        boolean terrainPopulated = stream.readBoolean();*/
+        boolean terrainPopulated = stream.readBoolean();
         
         BitSet sectionBitset = readBitset(stream,2);
         BeaconChunkSection[] chunkSectionArray = new BeaconChunkSection[16];
@@ -448,7 +433,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         }
         return new BeaconChunk(provider, minX + x, minZ + z,
                 chunkSectionArray, heightMap, byteBiomes, new ArrayList<>(), new ArrayList<>(),
-                0, true, true);
+                inhabitedTime, terrainGenerated, terrainPopulated);
     }
 
     @Override
@@ -466,9 +451,11 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         if (hasSkyLight) {
             stream.write(section.getSkyLightArray());
         }
-
-        stream.write(section.getIdArray());
-        stream.write(section.getDataArray());
+        
+        section.getStorage().getBlockData();
+        
+        stream.write(section.getStorage().getBlockIds());
+        stream.write(section.getStorage().getBlockData());
     }
 
     @Override
@@ -488,11 +475,11 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         } else {
             skyLightArray = null;
         }
-
-        byte[] idArray = new byte[4096];
+        
+        byte[] idArray = new byte[BlockStorage.SECTION_SIZE];
         stream.read(idArray);
 
-        byte[] dataByteArray = new byte[4096];
+        byte[] dataByteArray = new byte[BlockStorage.SECTION_SIZE];
         stream.read(dataByteArray);
 
         NibbleArray nibbleArray = new NibbleArray(dataByteArray);
@@ -609,5 +596,5 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             stream.write(compressedTiles);
         }
     }
-
+    
 }
