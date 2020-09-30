@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 import java.util.Arrays;
 
 public class BlockStorage {
-    private static final int SECTION_SIZE = 4096;
+    public static final int SECTION_SIZE = 4096;
     private final byte[] blockIds;
     private final NibbleArray blockData;
 
