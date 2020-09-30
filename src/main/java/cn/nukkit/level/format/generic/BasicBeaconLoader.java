@@ -476,15 +476,15 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             skyLightArray = null;
         }
         
-        byte[] idArray = new byte[BlockStorage.SECTION_SIZE];
-        stream.read(idArray);
+        byte[] blockIdsArray = new byte[BlockStorage.SECTION_SIZE];
+        stream.read(blockIdsArray);
 
-        byte[] dataByteArray = new byte[BlockStorage.SECTION_SIZE];
-        stream.read(dataByteArray);
+        byte[] blockDataArray = new byte[BlockStorage.SECTION_SIZE >> 1];
+        stream.read(blockDataArray);
 
-        NibbleArray nibbleArray = new NibbleArray(dataByteArray);
+        NibbleArray nibbleBlockDataArray = new NibbleArray(blockDataArray);
 
-        BlockStorage storage = new BlockStorage(idArray, nibbleArray);
+        BlockStorage storage = new BlockStorage(blockIdsArray, nibbleBlockDataArray);
 
         return new BeaconChunkSection(y, storage, blockLightArray, skyLightArray);
     }
