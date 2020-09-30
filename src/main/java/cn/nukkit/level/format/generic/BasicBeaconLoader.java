@@ -400,13 +400,13 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             stream.writeByte(heightMap[i]);
         }
 
-        long inhabitedTime = chunk.getInhabitedTime();
+        /*long inhabitedTime = chunk.getInhabitedTime();
         boolean terrainGenerated = chunk.isGenerated();
         boolean terrainPopulated = chunk.isPopulated();
         
         stream.writeLong(inhabitedTime);
         stream.writeBoolean(terrainGenerated);
-        stream.writeBoolean(terrainPopulated);
+        stream.writeBoolean(terrainPopulated);*/
         
         ChunkSection[] sections = chunk.getSections();
         BitSet sectionBitmask = new BitSet(16);
@@ -432,9 +432,9 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         byte[] heightMap = new byte[256];
         stream.read(heightMap);
 
-        long inhabitedTime = stream.readLong();
+        /*long inhabitedTime = stream.readLong();
         boolean terrainGenerated = stream.readBoolean();
-        boolean terrainPopulated = stream.readBoolean();
+        boolean terrainPopulated = stream.readBoolean();*/
         
         BitSet sectionBitset = readBitset(stream,2);
         BeaconChunkSection[] chunkSectionArray = new BeaconChunkSection[16];
@@ -448,7 +448,7 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         }
         return new BeaconChunk(provider, minX + x, minZ + z,
                 chunkSectionArray, heightMap, byteBiomes, new ArrayList<>(), new ArrayList<>(),
-                inhabitedTime, terrainPopulated, terrainGenerated);
+                0, true, true);
     }
 
     @Override
