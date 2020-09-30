@@ -49,7 +49,6 @@ public class BeaconChunk extends BaseChunk  {
         this.inhabitedTime = inhabitedTime;
         this.terrainPopulated = terrainPopulated;
         this.terrainGenerated = terrainGenerated;
-        this.initChunk();
     }
 
     public static BeaconChunk getEmptyChunk(final int chunkX, final int chunkZ) {
