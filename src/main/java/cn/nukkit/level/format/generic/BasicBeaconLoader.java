@@ -151,9 +151,9 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
         this.provider = provider;
         List<BeaconChunk> sortedChunks;
 
-        synchronized (provider.getLoadedChunks()) {
+        synchronized (provider.chunks) {
             sortedChunks = new ArrayList<>();
-            provider.getLoadedChunks().values().forEach(fullChunk -> {
+            provider.chunks.values().forEach(fullChunk -> {
                 if (fullChunk instanceof BeaconChunk){
                     sortedChunks.add((BeaconChunk) fullChunk);
                 }
