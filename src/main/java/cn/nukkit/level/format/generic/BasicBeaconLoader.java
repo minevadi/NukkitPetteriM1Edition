@@ -160,8 +160,18 @@ public class BasicBeaconLoader extends AbstractBeaconLoader {
             });
         }
 
+        sortedChunks.removeIf(chunk -> chunk == null || Arrays.stream(chunk.getSections()).allMatch(s -> {
+            if (s == null) {
+                return true;
+            }
+            for (byte b : s.getIdArray()) {
+                if (b != 0) {
+                    return false;
+                }
+            }
+            return true;
+        }));
         sortedChunks.sort(Comparator.comparingLong(chunk -> (long) chunk.getZ() * Integer.MAX_VALUE + (long) chunk.getX()));
-        sortedChunks.removeIf(chunk -> chunk == null || Arrays.stream(chunk.getSections()).allMatch(Objects::isNull)); // Remove empty chunks to save space
 
         minX = sortedChunks.stream().mapToInt(BeaconChunk::getX).min().orElse(0);
         minZ = sortedChunks.stream().mapToInt(BeaconChunk::getZ).min().orElse(0);
