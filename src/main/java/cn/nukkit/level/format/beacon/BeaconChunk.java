@@ -13,7 +13,37 @@ import cn.nukkit.level.format.generic.EmptyChunkSection;
 import cn.nukkit.nbt.tag.CompoundTag;
 
 public class BeaconChunk extends BaseChunk  {
+	
+    public static final BeaconChunk FULL_BEDROCK_CHUNK;
 
+    static {
+        final BeaconChunk chunk = new BeaconChunk(Beacon.class, true);
+        for (int Y = 0; Y < 16; Y++) {
+            final BeaconChunkSection section = new BeaconChunkSection(Y);
+            for (int x = 0; x < 16; x++) {
+                for (int y = 0; y < 16; y++) {
+                    for (int z = 0; z < 16; z++) {
+                        section.setBlockId(x, y, z, BlockID.INVISIBLE_BEDROCK);
+                        section.setBlockData(x, y, z, 0);
+                        section.setBlockLight(x, y, z, 0);
+                        section.setBlockSkyLight(x, y, z, 0);
+                    }
+                }
+            }
+            chunk.sections[Y] = section;
+        }
+        chunk.biomes = new byte[256];
+        Arrays.fill(chunk.biomes, (byte) 0);
+        chunk.heightMap = new byte[256];
+        Arrays.fill(chunk.heightMap, (byte) 256);
+        chunk.NBTtiles = new ArrayList<>();
+        chunk.NBTentities = new ArrayList<>();
+        for (ChunkSection section : chunk.getSections()) {
+            ((BeaconChunkSection) section).locked = true;
+        }
+        FULL_BEDROCK_CHUNK = chunk;
+    }
+	
     protected long inhabitedTime;
     protected boolean terrainPopulated;
     protected boolean terrainGenerated;
@@ -34,6 +64,14 @@ public class BeaconChunk extends BaseChunk  {
         this.biomes = new byte[256];
         this.sections = new ChunkSection[16];
         System.arraycopy(EmptyChunkSection.EMPTY, 0, this.sections, 0, 16);
+    }
+	
+    public BeaconChunk(final Class<? extends LevelProvider> providerClass, boolean custom) {
+        this.providerClass = providerClass;
+
+        this.biomes = new byte[256];
+        this.sections = new ChunkSection[16];
+        System.arraycopy(EmptyChunkSection.BEACON_EMPTY, 0, this.sections, 0, 16);
     }
     
     public BeaconChunk(LevelProvider provider, int x, int z, BeaconChunkSection[] sections, byte[] heightMap, byte[] biomes, List<CompoundTag> entities, List<CompoundTag> tiles, long inhabitedTime, boolean terrainPopulated, boolean terrainGenerated) {
@@ -72,6 +110,15 @@ public class BeaconChunk extends BaseChunk  {
             chunk.terrainPopulated = false;
             return chunk;
         } catch (final Exception e) {
+            return null;
+        }
+    }
+	
+    public static BeaconChunk getBorderChunk(final Level level, final int chunkX, final int chunkZ) {
+        try {
+            return FULL_BEDROCK_CHUNK.copy(level, chunkX, chunkZ);
+        } catch (final Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
