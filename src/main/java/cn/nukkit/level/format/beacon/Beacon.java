@@ -272,9 +272,20 @@ public class Beacon extends BaseLevelProvider{
         lastPosition += i;
     }
     
+    public static boolean isBorderChunk(int x, int z){
+        return x > Server.getInstance().getConfig("beacon.x.max",4) ||
+                x < Server.getInstance().getConfig("beacon.x.min",-5) ||
+                z > Server.getInstance().getConfig("beacon.z.max",4) ||
+                z < Server.getInstance().getConfig("beacon.z.min",-5);
+    }
+    
     @Override
     public synchronized BaseFullChunk loadChunk(long index, int chunkX, int chunkZ, boolean create) {
         if (this.level.timings.syncChunkLoadDataTimer != null) this.level.timings.syncChunkLoadDataTimer.startTiming();
+        if (isBorderChunk(chunkX,chunkZ)){
+            return BeaconChunk.getBorderChunk(this.level,chunkX,chunkZ);
+        }
+        
         BaseFullChunk chunk = null;
         try {
             synchronized (this.chunks) {
@@ -295,6 +306,25 @@ public class Beacon extends BaseLevelProvider{
         }
         if (this.level.timings.syncChunkLoadDataTimer != null) this.level.timings.syncChunkLoadDataTimer.stopTiming();
         return chunk;
+    }
+    
+    
+    
+    @Override
+    public BaseFullChunk getLoadedChunk(long hash) {
+        cn.nukkit.level.format.Chunk.Entry entry = Level.getChunkXZ(hash);
+        if (isBorderChunk(entry.chunkX,entry.chunkZ)){
+            return BeaconChunk.getBorderChunk(this.level,entry.chunkX,entry.chunkZ);
+        }
+
+        BaseFullChunk tmp = this.lastChunk.get();
+        if (tmp != null && tmp.getIndex() == hash) {
+            return tmp;
+        }
+        synchronized (this.chunks) {
+            this.lastChunk.set(tmp = this.chunks.get(hash));
+        }
+        return tmp;
     }
     
     /*@Override
