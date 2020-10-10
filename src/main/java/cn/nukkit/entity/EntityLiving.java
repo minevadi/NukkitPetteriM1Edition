@@ -57,6 +57,8 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
 
     private boolean blocking = false;
 
+    private int airTicks;
+
     protected final boolean isDrowned = this instanceof EntityDrowned;
 
     @Override
@@ -273,7 +275,7 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
         }
 
         if (this instanceof Player) {
-            if (!isBreathing && ((Player) this).getInventory().getHelmet() instanceof ItemTurtleShell) {
+            if (!isBreathing && ((Player) this).getInventory().getHelmetFast() instanceof ItemTurtleShell) {
                 if (turtleTicks > 0) {
                     isBreathing = true;
                     turtleTicks--;
@@ -347,14 +349,15 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
             if (this instanceof Player) {
                 if (this.age % 5 == 0) {
                     int block = this.level.getBlockIdAt(getFloorX(), getFloorY() - 1, getFloorZ());
-                    if (block == Block.MAGMA || block == Block.CACTUS) {
+                    if (block == Block.CACTUS) {
+                        Block.get(Block.CACTUS).onEntityCollide(this);
+                    } else if (block == Block.MAGMA) {
                         Block.get(Block.MAGMA).onEntityCollide(this);
-                    }
-                    if (block == Block.MAGMA && this.isInsideOfWater()) {
-                        this.level.addParticle(new BubbleParticle(this));
-                        this.setMotion(this.getMotion().add(0, -0.3, 0));
-                    }
-                    if (block == Block.SOUL_SAND && this.isInsideOfWater()) {
+                        if (this.isInsideOfWater()) {
+                            this.level.addParticle(new BubbleParticle(this));
+                            this.setMotion(this.getMotion().add(0, -0.3, 0));
+                        }
+                    } else if (block == Block.SOUL_SAND && this.isInsideOfWater()) {
                         this.level.addParticle(new BubbleParticle(this));
                         this.setMotion(this.getMotion().add(0, 0.3, 0));
                     }
@@ -469,10 +472,11 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
     }
     
     public int getAirTicks() {
-        return this.getDataPropertyShort(DATA_AIR);
+        return this.airTicks;
     }
 
     public void setAirTicks(int ticks) {
+        this.airTicks = ticks;
         this.setDataPropertyAndSendOnlyToSelf(new ShortEntityData(DATA_AIR, ticks));
     }
 

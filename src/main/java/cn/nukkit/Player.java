@@ -1473,10 +1473,10 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
                     this.portalPos = null;
                 } else {
-                    if (this.getLevel().isNether) {
+                    if (this.getLevel().getDimension() == Level.DIMENSION_NETHER) {
                         this.teleport(this.getServer().getDefaultLevel().getSafeSpawn(), TeleportCause.NETHER_PORTAL);
                     } else {
-                        Level nether = this.getServer().getLevelByName("nether");
+                        Level nether = this.getServer().getNetherWorld(this.level.getName());
                         if (nether != null) {
                             this.teleport(nether.getSafeSpawn(), TeleportCause.NETHER_PORTAL);
                         }
@@ -3138,13 +3138,15 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                 }
                             }
                         }
-                    }
-
-                    if (mapItem != null) {
+                    } else {
                         PlayerMapInfoRequestEvent event;
                         getServer().getPluginManager().callEvent(event = new PlayerMapInfoRequestEvent(this, mapItem));
 
                         if (!event.isCancelled()) {
+                            ItemMap map = (ItemMap) mapItem;
+                            if (map.trySendImage(this)) {
+                                return;
+                            }
                             try {
                                 BufferedImage image = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
                                 Graphics2D graphics = image.createGraphics();
@@ -3156,8 +3158,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                     }
                                 }
 
-                                ((ItemMap) mapItem).setImage(image);
-                                ((ItemMap) mapItem).sendImage(this);
+                                map.setImage(image);
+                                map.sendImage(this);
                             } catch (Exception ex) {
                                 this.getServer().getLogger().debug("There was an error while generating map image", ex);
                             }
