@@ -122,6 +122,16 @@ public class BeaconChunk extends BaseChunk  {
             return null;
         }
     }
+	
+    public BeaconChunk copy(Level level, int x, int z) {
+        BeaconChunk chunk = (BeaconChunk) super.clone();
+        chunk.providerClass = providerClass;
+        chunk.x = x;
+        chunk.z = z;
+        this.provider = level.getProvider();
+        this.providerClass = level.getProvider().getClass();
+        return chunk;
+    }
     
     public long getInhabitedTime() {
 		return inhabitedTime;
