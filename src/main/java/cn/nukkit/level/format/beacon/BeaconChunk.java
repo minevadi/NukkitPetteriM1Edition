@@ -23,7 +23,7 @@ public class BeaconChunk extends BaseChunk  {
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
-                        section.setBlockId(x, y, z, BlockID.INVISIBLE_BEDROCK);
+                        section.setBlockId(x, y, z, BlockID.AIR);
                         section.setBlockData(x, y, z, 0);
                         section.setBlockLight(x, y, z, 0);
                         section.setBlockSkyLight(x, y, z, 0);
