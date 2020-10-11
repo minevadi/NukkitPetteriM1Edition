@@ -273,10 +273,10 @@ public class Beacon extends BaseLevelProvider{
     }
     
     public static boolean isBorderChunk(int x, int z){
-        return x > Server.getInstance().getConfig("beacon.x.max",4) ||
-                x < Server.getInstance().getConfig("beacon.x.min",-5) ||
-                z > Server.getInstance().getConfig("beacon.z.max",4) ||
-                z < Server.getInstance().getConfig("beacon.z.min",-5);
+        return x > Server.getInstance().getPropertyInt("beacon.x.max",4) ||
+                x < Server.getInstance().getPropertyInt("beacon.x.min",-5) ||
+                z > Server.getInstance().getPropertyInt("beacon.z.max",4) ||
+                z < Server.getInstance().getPropertyInt("beacon.z.min",-5);
     }
     
     @Override
