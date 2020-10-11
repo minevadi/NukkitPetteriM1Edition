@@ -2604,6 +2604,10 @@ public class Server {
             put("vanilla-portals", true);
             put("persona-skins", true);
             put("multi-nether-worlds", "");
+            put("beacon.x.max", 10);
+            put("beacon.x.min", -10);
+            put("beacon.z.max", 10);
+            put("beacon.z.min", -10);
         }
     }
 
