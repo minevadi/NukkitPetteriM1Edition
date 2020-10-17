@@ -2083,6 +2083,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             this.setLevel(level);
         }
 
+        this.ticksSinceLastRest = nbt.getInt("ticksSinceLastRest");
+
         for (Tag achievement : nbt.getCompound("Achievements").getAllTags()) {
             if (!(achievement instanceof ByteTag)) {
                 continue;
@@ -2465,12 +2467,6 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
 
                     MovePlayerPacket movePlayerPacket = (MovePlayerPacket) packet;
-
-                    if (server.suomiCraftPEMode() && Math.abs(movePlayerPacket.pitch) > 90) {
-                        this.kick(PlayerKickEvent.Reason.UNKNOWN, "Invalid MovePlayerPacket!");
-                        break;
-                    }
-
                     Vector3 newPos = new Vector3(movePlayerPacket.x, movePlayerPacket.y - this.getEyeHeight(), movePlayerPacket.z);
                     double dis = newPos.distanceSquared(this);
 
@@ -4104,6 +4100,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
             this.namedTag.putInt("foodLevel", this.foodData.getLevel());
             this.namedTag.putFloat("foodSaturationLevel", this.foodData.getFoodSaturationLevel());
 
+            this.namedTag.putInt("ticksSinceLastRest", this.ticksSinceLastRest);
+
             if (!this.username.isEmpty() && this.namedTag != null) {
                 if (this.server.savePlayerDataByUuid) {
                     this.server.saveOfflinePlayerData(this.uuid, this.namedTag, async);
@@ -4261,7 +4259,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
             if (!ev.getKeepInventory() && this.level.getGameRules().getBoolean(GameRule.DO_ENTITY_DROPS)) {
                 for (Item item : ev.getDrops()) {
-                    this.level.dropItem(this, item, null, true, 40);
+                    if (!item.hasEnchantment(Enchantment.ID_VANISHING_CURSE)) {
+                        this.level.dropItem(this, item, null, true, 40);
+                    }
                 }
 
                 if (this.inventory != null) {
