@@ -24,6 +24,7 @@ jobs:
       - run: mvn clean package
 
       - store_artifacts:
-          paths:
-            - target/Nukkit-PM1E.jar
-            - target/Nukkit-PM1E-sources.jar
+          path: target/Nukkit-PM1E.jar
+          
+      - store_artifacts:
+          path: target/Nukkit-PM1E-sources.jar
