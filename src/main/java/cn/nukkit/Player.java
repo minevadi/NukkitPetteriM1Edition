@@ -3878,6 +3878,15 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         //pk.setChannel(Network.CHANNEL_TEXT);
         this.dataPacket(pk);
     }
+    
+    public void sendWhisper(String sender, String message) {
+        TextPacket pk = new TextPacket();
+        pk.type = TextPacket.TYPE_WHISPER;
+        pk.source = sender;
+        pk.message = message;
+        //pk.setChannel(Network.CHANNEL_TEXT);
+        this.dataPacket(pk);
+    }
 
     public void clearTitle() {
         SetTitlePacket pk = new SetTitlePacket();
