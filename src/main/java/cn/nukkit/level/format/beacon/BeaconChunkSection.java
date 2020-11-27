@@ -12,7 +12,8 @@ import cn.nukkit.utils.BinaryStream;
 
 public class BeaconChunkSection implements ChunkSection {
 
-    private static final PalettedBlockStorage EMPTY_STORAGE = new PalettedBlockStorage();
+    private static final PalettedBlockStorage EMPTY_STORAGE_PRE419 = new PalettedBlockStorage(0);
+    private static final PalettedBlockStorage EMPTY_STORAGE = new PalettedBlockStorage(ProtocolInfo.v1_16_100);
 
     private final int y;
 
@@ -246,7 +247,11 @@ public class BeaconChunkSection implements ChunkSection {
             stream.putByte((byte) 8); // Paletted chunk because Mojang messed up the old one
             stream.putByte((byte) 2);
             this.storage.writeTo(protocol, stream);
-            EMPTY_STORAGE.writeTo(protocol, stream);
+            if (protocol >= ProtocolInfo.v1_16_100) {
+                EMPTY_STORAGE.writeTo(protocol, stream);
+            } else {
+                EMPTY_STORAGE_PRE419.writeTo(protocol, stream);
+            }
         }
     }
 
