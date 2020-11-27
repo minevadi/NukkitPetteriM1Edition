@@ -1143,7 +1143,7 @@ public abstract class Entity extends Location implements Metadatable {
                     this.setHealth(1);
 
                     this.addEffect(Effect.getEffect(Effect.REGENERATION).setDuration(800).setAmplifier(1));
-                    this.addEffect(Effect.getEffect(Effect.FIRE_RESISTANCE).setDuration(800).setAmplifier(1));
+                    this.addEffect(Effect.getEffect(Effect.FIRE_RESISTANCE).setDuration(800));
                     this.addEffect(Effect.getEffect(Effect.ABSORPTION).setDuration(100).setAmplifier(1));
 
                     EntityEventPacket pk = new EntityEventPacket();
@@ -1460,10 +1460,10 @@ public abstract class Entity extends Location implements Metadatable {
         pk.motionY = (float) motionY;
         pk.motionZ = (float) motionZ;
         //pk.setChannel(Network.CHANNEL_MOVEMENT);
-        //Server.broadcastPacket(this.hasSpawned.values(), pk);
-        for (Player p : this.hasSpawned.values()) {
+        Server.broadcastPacket(this.hasSpawned.values(), pk);
+        /*for (Player p : this.hasSpawned.values()) {
             p.batchDataPacket(pk);
-        }
+        }*/
     }
 
     public Vector3 getDirectionVector() {
