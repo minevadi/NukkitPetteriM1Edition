@@ -9,6 +9,7 @@ import cn.nukkit.level.format.anvil.util.NibbleArray;
 import cn.nukkit.level.format.generic.EmptyChunkSection;
 import cn.nukkit.level.util.PalettedBlockStorage;
 import cn.nukkit.utils.BinaryStream;
+import cn.nukkit.network.protocol.ProtocolInfo;
 
 public class BeaconChunkSection implements ChunkSection {
 
