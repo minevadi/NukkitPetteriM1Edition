@@ -112,16 +112,16 @@ public class Server {
 
     private static Server instance;
 
-    private BanList banByName;
-    private BanList banByIP;
-    private Config operators;
-    private Config whitelist;
+    private final BanList banByName;
+    private final BanList banByIP;
+    private final Config operators;
+    private final Config whitelist;
 
-    private AtomicBoolean isRunning = new AtomicBoolean(true);
+    private final AtomicBoolean isRunning = new AtomicBoolean(true);
     private boolean hasStopped;
 
-    private PluginManager pluginManager;
-    private ServerScheduler scheduler;
+    private final PluginManager pluginManager;
+    private final ServerScheduler scheduler;
 
     private int tickCounter;
     private long nextTick;
@@ -133,19 +133,19 @@ public class Server {
     private final NukkitConsole console;
     private final ConsoleThread consoleThread;
 
-    private SimpleCommandMap commandMap;
-    private CraftingManager craftingManager;
-    private ResourcePackManager resourcePackManager;
-    private ConsoleCommandSender consoleSender;
+    private final SimpleCommandMap commandMap;
+    private final CraftingManager craftingManager;
+    private final ResourcePackManager resourcePackManager;
+    private final ConsoleCommandSender consoleSender;
 
     private int maxPlayers;
     private boolean autoSave = true;
     private RCON rcon;
 
-    private EntityMetadataStore entityMetadata;
-    private PlayerMetadataStore playerMetadata;
-    private LevelMetadataStore levelMetadata;
-    private Network network;
+    private final EntityMetadataStore entityMetadata;
+    private final PlayerMetadataStore playerMetadata;
+    private final LevelMetadataStore levelMetadata;
+    private final Network network;
 
     private boolean networkCompressionAsync;
     public int networkCompressionLevel;
@@ -160,10 +160,10 @@ public class Server {
     private int autoSaveTicker;
     private int autoSaveTicks;
 
-    private BaseLang baseLang;
+    private final BaseLang baseLang;
     private boolean forceLanguage;
 
-    private UUID serverID;
+    private final UUID serverID;
 
     private final String filePath;
     private final String dataPath;
@@ -171,7 +171,7 @@ public class Server {
 
     private QueryHandler queryHandler;
     private QueryRegenerateEvent queryRegenerateEvent;
-    private Config properties;
+    private final Config properties;
 
     public SentryClient sentry;
 
@@ -184,7 +184,6 @@ public class Server {
 
     private static final Pattern uuidPattern = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}.dat$");
 
-    @SuppressWarnings("serial")
     private final Map<Integer, Level> levels = new HashMap<Integer, Level>() {
         public Level put(Integer key, Level value) {
             Level result = super.put(key, value);
@@ -208,7 +207,7 @@ public class Server {
     private Level defaultLevel;
     private final Thread currentThread;
     private Watchdog watchdog;
-    private DB nameLookup;
+    private final DB nameLookup;
     private PlayerDataSerializer playerDataSerializer;
     public static List<String> noTickingWorlds = new ArrayList<>();
 
@@ -266,6 +265,7 @@ public class Server {
     public boolean savePlayerDataByUuid;
     public boolean vanillaPortals;
     public boolean personaSkins;
+    public boolean cacheChunks;
 
     Server(final String filePath, String dataPath, String pluginPath, boolean loadPlugins, boolean debug) {
         Preconditions.checkState(instance == null, "Already initialized!");
@@ -313,7 +313,6 @@ public class Server {
             new File(dataPath + "players/").mkdirs();
         }
 
-        this.forceLanguage = this.getPropertyBoolean("force-language", false);
         this.baseLang = new BaseLang(this.getPropertyString("language", BaseLang.FALLBACK_LANGUAGE));
 
         Object poolSize = this.getProperty("async-workers", "auto");
@@ -328,14 +327,6 @@ public class Server {
         ServerScheduler.WORKERS = (int) poolSize;
 
         Zlib.setProvider(this.getPropertyInt("zlib-provider", 2));
-
-        this.networkCompressionLevel = this.getPropertyInt("compression-level", 4);
-        this.networkCompressionAsync = this.getPropertyBoolean("async-compression", true);
-
-        this.autoTickRate = this.getPropertyBoolean("auto-tick-rate", true);
-        this.autoTickRateLimit = this.getPropertyInt("auto-tick-rate-limit", 20);
-        this.alwaysTickPlayers = this.getPropertyBoolean("always-tick-players", false);
-        this.baseTickRate = this.getPropertyInt("base-tick-rate", 1);
 
         this.scheduler = new ServerScheduler();
 
@@ -666,7 +657,6 @@ public class Server {
         this.batchPackets(players, packets, false);
     }
 
-    @SuppressWarnings("unused")
     public void batchPackets(Player[] players, DataPacket[] packets, boolean forceSync) {
         if (players == null || packets == null || players.length == 0 || packets.length == 0) {
             return;
@@ -734,7 +724,7 @@ public class Server {
 
             for (int i = 0; i < packetList.size(); i++) {
                 DataPacket p = packetList.get(i);
-                int idx = i * 2;
+                int idx = i << 1;
                 byte[] buf = p.getBuffer();
                 payload[idx] = Binary.writeUnsignedVarInt(buf.length);
                 payload[idx + 1] = buf;
@@ -2426,6 +2416,13 @@ public class Server {
      * Load some settings from server.properties
      */
     private void loadSettings() {
+        this.forceLanguage = this.getPropertyBoolean("force-language", false);
+        this.networkCompressionLevel = this.getPropertyInt("compression-level", 4);
+        this.networkCompressionAsync = this.getPropertyBoolean("async-compression", true);
+        this.autoTickRate = this.getPropertyBoolean("auto-tick-rate", true);
+        this.autoTickRateLimit = this.getPropertyInt("auto-tick-rate-limit", 20);
+        this.alwaysTickPlayers = this.getPropertyBoolean("always-tick-players", false);
+        this.baseTickRate = this.getPropertyInt("base-tick-rate", 1);
         this.suomicraftMode = this.getPropertyBoolean("suomicraft-mode", false);
         this.callDataPkEv = this.getPropertyBoolean("call-data-pk-send-event", true);
         this.callBatchPkEv = this.getPropertyBoolean("call-batch-pk-send-event", true);
@@ -2476,6 +2473,7 @@ public class Server {
         this.savePlayerDataByUuid = this.getPropertyBoolean("save-player-data-by-uuid", true);
         this.vanillaPortals = this.getPropertyBoolean("vanilla-portals", true);
         this.personaSkins = this.getPropertyBoolean("persona-skins", true);
+        this.cacheChunks = this.getPropertyBoolean("cache-chunks", false);
         this.c_s_spawnThreshold = (int) Math.ceil(Math.sqrt(this.spawnThreshold));
         try {
             this.gamemode = this.getPropertyInt("gamemode", 0) & 0b11;

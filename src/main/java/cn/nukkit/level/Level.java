@@ -141,8 +141,6 @@ public class Level implements ChunkManager, Metadatable {
 
     private final ConcurrentLinkedQueue<BlockEntity> updateBlockEntities = new ConcurrentLinkedQueue<>();
 
-    private boolean cacheChunks;
-
     private final Server server;
 
     private final int levelId;
@@ -167,7 +165,7 @@ public class Level implements ChunkManager, Metadatable {
 
     public float skyLightSubtracted;
 
-    private String folderName;
+    private final String folderName;
 
     // Avoid OOM, gc'd references result in whole chunk being sent (possibly higher cpu)
     private final Long2ObjectOpenHashMap<SoftReference<Map<Character, Object>>> changedBlocks = new Long2ObjectOpenHashMap<>();
@@ -188,23 +186,23 @@ public class Level implements ChunkManager, Metadatable {
     private final Long2ObjectOpenHashMap<Boolean> chunkPopulationQueue = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectOpenHashMap<Boolean> chunkPopulationLock = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectOpenHashMap<Boolean> chunkGenerationQueue = new Long2ObjectOpenHashMap<>();
-    private int chunkGenerationQueueSize;
-    private int chunkPopulationQueueSize;
+    private final int chunkGenerationQueueSize;
+    private final int chunkPopulationQueueSize;
 
     private boolean autoSave;
 
     private BlockMetadataStore blockMetadata;
 
-    private boolean useSections;
+    private final boolean useSections;
 
-    private Vector3 temporalVector;
+    private final Vector3 temporalVector;
 
     public int sleepTicks = 0;
 
-    private int chunkTickRadius;
+    private final int chunkTickRadius;
     private final Long2IntMap chunkTickList = new Long2IntOpenHashMap();
-    private int chunksPerTicks;
-    private boolean clearChunksOnTick;
+    private final int chunksPerTicks;
+    private final boolean clearChunksOnTick;
 
     private int updateLCG = ThreadLocalRandom.current().nextInt();
 
@@ -252,10 +250,9 @@ public class Level implements ChunkManager, Metadatable {
 
     public GameRules gameRules;
 
-    private boolean randomTickingEnabled;
+    private final boolean randomTickingEnabled;
 
     public Level(Server server, String name, String path, Class<? extends LevelProvider> provider) {
-
         this.levelId = levelIdCounter++;
         this.blockMetadata = new BlockMetadataStore(this);
         this.server = server;
@@ -306,7 +303,6 @@ public class Level implements ChunkManager, Metadatable {
         this.chunkPopulationQueueSize = this.server.getPropertyInt("chunk-generation-population-queue-size", 8);
         this.chunkTickList.clear();
         this.clearChunksOnTick = this.server.getPropertyBoolean("clear-chunk-tick-list", true);
-        this.cacheChunks = this.server.getPropertyBoolean("cache-chunks", false);
         this.temporalVector = new Vector3(0, 0, 0);
         this.tickRate = 1;
 
@@ -595,26 +591,51 @@ public class Level implements ChunkManager, Metadatable {
     }
 
     public void addLevelSoundEvent(Vector3 pos, int type, int data, int entityType) {
-        addLevelSoundEvent(pos, type, data, entityType, false, false);
+        this.addLevelSoundEvent(pos, type, data, entityType, null);
+    }
+
+    public void addLevelSoundEvent(Vector3 pos, int type, int data, int entityType, Player[] players) {
+        this.addLevelSoundEvent(pos, type, data, entityType, false, false, players);
     }
 
     public void addLevelSoundEvent(Vector3 pos, int type, int data, int entityType, boolean isBaby, boolean isGlobal) {
-        String identifier = AddEntityPacket.LEGACY_IDS.getOrDefault(entityType, ":");
-        addLevelSoundEvent(pos, type, data, identifier, isBaby, isGlobal);
+        this.addLevelSoundEvent(pos, type, data, entityType, isBaby, isGlobal, null);
     }
-     public void addLevelSoundEvent(Vector3 pos, int type) {
-        this.addLevelSoundEvent(pos, type, -1);
+
+    public void addLevelSoundEvent(Vector3 pos, int type, int data, int entityType, boolean isBaby, boolean isGlobal, Player[] players) {
+        String identifier = AddEntityPacket.LEGACY_IDS.getOrDefault(entityType, ":");
+        this.addLevelSoundEvent(pos, type, data, identifier, isBaby, isGlobal, players);
+    }
+
+    public void addLevelSoundEvent(Vector3 pos, int type) {
+        this.addLevelSoundEvent(pos, type, null);
+    }
+
+    public void addLevelSoundEvent(Vector3 pos, int type, Player[] players) {
+        this.addLevelSoundEvent(pos, type, -1, players);
     }
 
     public void addLevelSoundEvent(int type, int pitch, int data, Vector3 pos) {
-        this.addLevelSoundEvent(pos, type, data, ":", false, false);
+        this.addLevelSoundEvent(type, pitch, data, pos, null);
+    }
+
+    public void addLevelSoundEvent(int type, int pitch, int data, Vector3 pos, Player[] players) {
+        this.addLevelSoundEvent(pos, type, data, ":", false, false, players);
     }
 
     public void addLevelSoundEvent(Vector3 pos, int type, int data) {
-        this.addLevelSoundEvent(pos, type, data, ":", false, false);
+        this.addLevelSoundEvent(pos, type, data, null);
+    }
+
+    public void addLevelSoundEvent(Vector3 pos, int type, int data, Player[] players) {
+        this.addLevelSoundEvent(pos, type, data, ":", false, false, players);
     }
 
     public void addLevelSoundEvent(Vector3 pos, int type, int data, String identifier, boolean isBaby, boolean isGlobal) {
+        this.addLevelSoundEvent(pos, type, data, identifier, isBaby, isGlobal, null);
+    }
+
+    public void addLevelSoundEvent(Vector3 pos, int type, int data, String identifier, boolean isBaby, boolean isGlobal, Player[] players) {
         LevelSoundEventPacket pk = new LevelSoundEventPacket();
         pk.sound = type;
         pk.extraData = data;
@@ -625,7 +646,11 @@ public class Level implements ChunkManager, Metadatable {
         pk.isGlobal = isGlobal;
         pk.isBabyMob = isBaby;
 
-        this.addChunkPacket(pos.getFloorX() >> 4, pos.getFloorZ() >> 4, pk);
+        if (players == null) {
+            this.addChunkPacket(pos.getFloorX() >> 4, pos.getFloorZ() >> 4, pk);
+        } else {
+            this.server.batchPackets(players, new DataPacket[]{pk}, false);
+        }
     }
 
     public void addLevelSoundEvent(Vector3 pos, int type, int pitch, int data, boolean isGlobal) {
@@ -2123,17 +2148,13 @@ public class Level implements ChunkManager, Metadatable {
         }
 
         Vector3 above = new Vector3(target.x, target.y + 1, target.z);
-        if (above != null) {
-            if (this.getBlockIdAt((int) above.x, (int) above.y, (int) above.z) == Item.FIRE) {
-                this.setBlock(above, Block.get(BlockID.AIR), true);
-            }
+        if (this.getBlockIdAt((int) above.x, (int) above.y, (int) above.z) == Item.FIRE) {
+            this.setBlock(above, Block.get(BlockID.AIR), true);
         }
 
         if (createParticles) {
             Map<Integer, Player> players = this.getChunkPlayers((int) target.x >> 4, (int) target.z >> 4);
-
             this.addParticle(new DestroyBlockParticle(target.add(0.5), target), players.values());
-
             if (player != null) {
                 players.remove(player.getLoaderId());
             }
@@ -2457,7 +2478,12 @@ public class Level implements ChunkManager, Metadatable {
 
 
         if (playSound) {
-            this.addLevelSoundEvent(hand, LevelSoundEventPacket.SOUND_PLACE, GlobalBlockPalette.getOrCreateRuntimeId(ProtocolInfo.CURRENT_PROTOCOL, hand.getId(), hand.getDamage()));
+            Int2ObjectMap<ObjectList<Player>> players = Server.shortPlayers(this.getChunkPlayers(hand.getChunkX(), hand.getChunkZ()).values());
+            for (int protocolId : players.keySet()) {
+                ObjectList<Player> targets = players.get(protocolId);
+                int soundData = GlobalBlockPalette.getOrCreateRuntimeId(protocolId, hand.getId(), hand.getDamage());
+                this.addLevelSoundEvent(hand, LevelSoundEventPacket.SOUND_PLACE, soundData, targets.toArray(new Player[0]));
+            }
         }
 
         if (item.getCount() <= 0) {
@@ -3071,7 +3097,7 @@ public class Level implements ChunkManager, Metadatable {
         if (this.timings.syncChunkSendTimer != null) this.timings.syncChunkSendTimer.startTiming();
         long index = Level.chunkHash(x, z);
 
-        if (this.cacheChunks) {
+        if (server.cacheChunks) {
             BatchPacket data = Player.getChunkCacheFromData(protocol, x, z, subChunkCount, payload);
             BaseFullChunk chunk = getChunk(x, z, false);
             if (chunk != null && chunk.getChanges() <= timestamp) {
@@ -4160,7 +4186,7 @@ public class Level implements ChunkManager, Metadatable {
 
     private ConcurrentMap<Long, Int2ObjectMap<Player>> getChunkSendQueue(int protocol) {
         int protocolId = this.getChunkProtocol(protocol);
-        return this.chunkSendQueues.computeIfAbsent(protocolId, i -> new ConcurrentHashMap());
+        return this.chunkSendQueues.computeIfAbsent(protocolId, i -> new ConcurrentHashMap<>());
     }
 
     private LongSet getChunkSendTasks(int protocol) {
@@ -4168,28 +4194,30 @@ public class Level implements ChunkManager, Metadatable {
         return this.chunkSendTasks.computeIfAbsent(protocolId, i -> new LongOpenHashSet());
     }
 
-    private int getChunkProtocol(int protocolId) {
-        if (protocolId >= ProtocolInfo.v1_16_100) {
+    private int getChunkProtocol(int protocol) {
+        if (protocol >= ProtocolInfo.v1_16_100) {
             return ProtocolInfo.v1_16_100;
-        } else if (protocolId >= ProtocolInfo.v1_16_0 && protocolId <= ProtocolInfo.v1_16_100_52) {
+        } else if (protocol >= ProtocolInfo.v1_16_20 && protocol <= ProtocolInfo.v1_16_100_52) {
+            return ProtocolInfo.v1_16_20;
+        } else if (protocol == ProtocolInfo.v1_16_0) {
             return ProtocolInfo.v1_16_0;
-        } else if (protocolId == ProtocolInfo.v1_14_0 || protocolId == ProtocolInfo.v1_14_60) {
+        } else if (protocol == ProtocolInfo.v1_14_0 || protocol == ProtocolInfo.v1_14_60) {
             return ProtocolInfo.v1_14_0;
-        } else if (protocolId == ProtocolInfo.v1_13_0) {
+        } else if (protocol == ProtocolInfo.v1_13_0) {
             return ProtocolInfo.v1_13_0;
-        } else if (protocolId == ProtocolInfo.v1_12_0) {
+        } else if (protocol == ProtocolInfo.v1_12_0) {
             return ProtocolInfo.v1_12_0;
-        } else if (protocolId < ProtocolInfo.v1_12_0) {
+        } else if (protocol < ProtocolInfo.v1_12_0) {
             return 0;
         }
-        throw new IllegalArgumentException("Unsuitable protocol used protocol='" + protocolId + "'");
+        throw new IllegalArgumentException("Invalid chunk protocol: " + protocol);
     }
 
     private static boolean matchMVChunkProtocol(int chunk, int player) {
         return (chunk == 0 && player < ProtocolInfo.v1_12_0) || (chunk == ProtocolInfo.v1_12_0 && player == ProtocolInfo.v1_12_0) || (chunk == ProtocolInfo.v1_13_0 && player == ProtocolInfo.v1_13_0) ||
-                (chunk == ProtocolInfo.v1_14_0 && (player == ProtocolInfo.v1_14_0 || player == ProtocolInfo.v1_14_60)) ||
-                ((chunk >= ProtocolInfo.v1_16_0 && player >= ProtocolInfo.v1_16_0) && (chunk <= ProtocolInfo.v1_16_100_52 && player <= ProtocolInfo.v1_16_100_52)) ||
-                (chunk == ProtocolInfo.v1_16_100 && player == ProtocolInfo.v1_16_100);
+                (chunk == ProtocolInfo.v1_14_0 && (player == ProtocolInfo.v1_14_0 || player == ProtocolInfo.v1_14_60)) || (chunk == ProtocolInfo.v1_16_0 && player == ProtocolInfo.v1_16_0) ||
+                ((chunk >= ProtocolInfo.v1_16_20 && player >= ProtocolInfo.v1_16_20) && (chunk <= ProtocolInfo.v1_16_100_52 && player <= ProtocolInfo.v1_16_100_52)) ||
+                (chunk >= ProtocolInfo.v1_16_100 && player >= ProtocolInfo.v1_16_100); // remember to change >= from 1.16.100 on next palette change
     }
 
     private static class CharacterHashMap extends HashMap<Character, Object> {
