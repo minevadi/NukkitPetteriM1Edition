@@ -193,19 +193,6 @@ public class Beacon extends BaseLevelProvider{
             }
         }
 
-        Map<Integer, Integer> extra = chunk.getBlockExtraDataArray();
-        BinaryStream extraData;
-        if (!extra.isEmpty()) {
-            extraData = new BinaryStream();
-            extraData.putVarInt(extra.size());
-            for (Map.Entry<Integer, Integer> entry : extra.entrySet()) {
-                extraData.putVarInt(entry.getKey());
-                extraData.putLShort(entry.getValue());
-            }
-        } else {
-            extraData = null;
-        }
-
         int subChunkCount = 0;
         cn.nukkit.level.format.ChunkSection[] sections = chunk.getSections();
         for (int i = sections.length - 1; i >= 0; i--) {
@@ -237,10 +224,8 @@ public class Beacon extends BaseLevelProvider{
             }
             stream.put(chunk.getBiomeIdArray());
             stream.putByte((byte) 0);
-            if (extraData != null) {
-                stream.put(extraData.getBuffer());
-            } else {
-                stream.putVarInt(0);
+            if (protocolId < ProtocolInfo.v1_16_100) {
+                stream.putVarInt(0); // There is no extra data anymore but idk when it was removed
             }
             stream.put(blockEntities);
             this.getLevel().chunkRequestCallback(protocolId, timestamp, x, z, subChunkCount, stream.getBuffer());
