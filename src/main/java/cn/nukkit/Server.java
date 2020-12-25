@@ -2519,6 +2519,10 @@ public class Server {
             put("enable-rcon", false);
             put("rcon.password", Base64.getEncoder().encodeToString(UUID.randomUUID().toString().replace("-", "").getBytes()).substring(3, 13));
             put("auto-save", true);
+            put("beacon.x.max", 10);
+            put("beacon.x.min", -10);
+            put("beacon.z.max", 10);
+            put("beacon.z.min", -10);
             put("force-resources", false);
             put("xbox-auth", true);
             put("bed-spawnpoints", true);
@@ -2595,10 +2599,6 @@ public class Server {
             put("vanilla-portals", true);
             put("persona-skins", true);
             put("multi-nether-worlds", "");
-            put("beacon.x.max", 10);
-            put("beacon.x.min", -10);
-            put("beacon.z.max", 10);
-            put("beacon.z.min", -10);
         }
     }
 
